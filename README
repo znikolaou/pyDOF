@@ -1,0 +1,6 @@
+# PYthon package for Discrete OPtimised Filters (PYDOF)
+# Author: Z. Nikolaou.
+
+#To use: 
+	1. Set environment variables: source setenv.sh
+        2. Follow examples in ./tutorials/
