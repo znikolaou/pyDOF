@@ -6,10 +6,10 @@ from objectiveFunction import *
 from optimiser import *
 
 #define waveno object
-wavenumber=Wavenumber(100)
+wavenumber=Wavenumber(600)
 
 #define Implicit filter having a=0.0
-flt=Implicit(wavenumber, -0.49)
+flt=Implicit(wavenumber, -0.4)
 
 #define discrete filter
 dflt=DiscreteFilter(wavenumber)
@@ -19,6 +19,7 @@ opt=Optimiser(flt, dflt, isZeroDampingAtPi=True, isPositive=False, isAdaptive=Tr
 opt.run()
 coeffs=opt.get()
 print(coeffs)
+
 plt.plot(wavenumber.get(), flt.getTransferFunction(), 'ko')
 plt.plot(wavenumber.get(), opt.getSolution())
 plt.show()

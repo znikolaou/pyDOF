@@ -51,6 +51,7 @@ class Output(Const):
         f.write('\n! Optimisation error='+ \
                 Form.short(self._dfilter.optError))
         f.write('\n! Coeffs g[0], g[1], ... , g[nm_f]:')
+        f.write('\n'+str(nmp1))
         for j in range(nmp1): \
                 f.write('\n'+str(j)+" "+Form.long(coeffs[j]))
         f.write('\n'+self.LINE)
@@ -69,6 +70,7 @@ class Output(Const):
         f.write('\n! Optimisation error='+ \
                 Form.short(self._ifilter.optError))
         f.write('\n! Coeffs g[0], g[1], ... , g[nm_i]:')
+        f.write('\n'+str(nmp1))
         for j in range(nmp1): \
                 f.write('\n'+str(j)+" "+Form.long(coeffs[j]))
         f.write('\n'+self.LINE)

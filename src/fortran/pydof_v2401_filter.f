@@ -1,3 +1,21 @@
+      SUBROUTINE PYDOF_INIT(NX,NY,NZ,BCX,BCY,BCZ)
+      IMPLICIT NONE
+      INTEGER NX,NY,NZ
+      CHARACTER(LEN=1) BCX,BCY,BCZ
+
+      CALL PYDOF_READ_COEFFS()
+      CALL PYDOF_SET_DIMESION(NX,NY,NZ)
+      CALL PYDOF_SET_BOUNDARY_CONDITIONS(NX,NY,NZ,BCX,BCY,BCZ)
+      CALL PYDOF_SET_FILTER(NX,NY,NZ) 
+
+      RETURN 
+      END
+      !-----------------------------------------------------------------
+      SUBROUTINE PYDOF_READ_COEFFS(FILENAME)
+      IMPLICIT NONE
+
+      RETURN 
+      END
       !-----------------------------------------------------------------
       DOUBLE PRECISION FUNCTION GET_1D_COEFFS
       IMPLICIT NONE
@@ -15,22 +33,35 @@
       
       END FUNCTION
       !-----------------------------------------------------------------
-      INTEGER FUNCTION GET_PROBLEM_DIMENSION(NX,NY,NZ)
+      SUBROUTINE SET_DIMENSION(NX,NY,NZ)
       IMPLICIT NONE
-      INTEGER NX,NY,NZ
+      INTEGER NX,NY,NZ,ND
+      COMMON/BLOCK_DIMENSION/ ND
 
-      GET_PROBLEM_DIMENSION=MIN(NX-1,1)+MIN(NY-1,1)+MIN(NZ-1,1)
+      ND=MIN(NX-1,1)+MIN(NY-1,1)+MIN(NZ-1,1)
 
-      END FUNCTION
+      END
       !-----------------------------------------------------------------
       DOUBLE PRECISION FUNCTION GET_COEFFS_TENSOR(NX,NY,NZ)
       IMPLICIT NONE
+      DOUBLE PRECISION COEFFS(0:NXM,0:NXM,0:NXM)
+      COMMON/COEFFS_TENSOR/COEFFS
 
       !TODO: BUILD COEFFS TENSOR
+
+
       END FUNCTION
       !-----------------------------------------------------------------
       SUBROUTINE INITIALISE_FILTER(NX,NY,NZ,BCX,BCY,BCZ)
+      INTEGER NX,NY,NZ
+      CHARACTER(LEN=1) BCX,BCY,BCZ
 
+      CALL READ_1DCOEFFS()
+      CALL SET_DIMESION(NX,NY,NZ)
+      CALL SET_BOUNDARY_CONDITIONS(NX,NY,NZ,BCX,BCY,BCZ)
+      CALL SET_DFILTER(NX,NY,NZ) 
+
+      END
       !-----------------------------------------------------------------
 
       INTEGER FUNCTION GET_NEIGHBOURS(BC, N, NM)
