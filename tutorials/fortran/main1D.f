@@ -1,26 +1,26 @@
       PROGRAM MAIN
       IMPLICIT NONE
-      INCLUDE "PYDOF_COMMON.h"
 
-      INTEGER I, N=500
-      DOUBLE PRECISION PI=4.0*ATAN(1.0)
-      DOUBLE PRECISION DX, X(N), Y(N), YBAR(N)
+      INTEGER I,N
+      DOUBLE PRECISION PI
+      PARAMETER(N=500,PI=4.0*ATAN(1.0))
+      DOUBLE PRECISION DX,X(N),Y(N),FY(N),RY(N)
 
-      !INIT FILTER
-      CALL PYDOF_INIT()
+      CALL PYDOF_INIT(N,1,1,'P','P','P')
 
       DX=2.0*PI/(N-1)
-      DO I=1, N
+      DO I=1,N
        X(I)=I*DX
        Y(I)=SIN(X(I))
       ENDDO
 
-      YBAR=FILTER(Y)
+      FY=FILTER(Y)
+      RY=FILTER_R(FY)
 
-      OPEN(UNI=1,FILE='output.txt',STATUS='OLD',FORM='FORMATTED')
-      WRITE(1,*) 'X', 'Y', 'YBAR'
+      OPEN(UNI=1,FILE='results.txt',STATUS='OLD',FORM='FORMATTED')
+      WRITE(1,*) 'X','Y','FY','RY'
       DO I=1,N 
-       WRITE(1,*) X(I),Y(I),YBAR(I)
+       WRITE(1,*) X(I),Y(I),FY(I),RY(I)
       ENDDO
       CLOSE(1)
 
