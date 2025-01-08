@@ -125,9 +125,15 @@
       INTEGER NX,NY,NZ
       CHARACTER(LEN=1) BCX,BCY,BCZ
 
+      WRITE(*,*) 
+      WRITE(*,*) '***********PYDOF***********'
+      WRITE(*,*) 
+      WRITE(*,*) 'Initialising filter ...'
+      WRITE(*,*) 'Coefs src:'
+      WRITE(*,*) SRC 
       CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
       CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
-      CALL PYDOF_READ_COEFS(SRC) 
+      !CALL PYDOF_READ_COEFS(SRC) 
       !CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ,IL,JL,KL)
       !CALL PYDOF_SET_DFILTER(NX,NY,NZ,IL,JL,KL) 
 
