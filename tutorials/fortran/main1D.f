@@ -6,7 +6,7 @@
       PARAMETER(N=500,PI=4.0*ATAN(1.0))
       DOUBLE PRECISION DX,X(N),Y(N),FY(N),RY(N)
 
-      CALL PYDOF_INIT(N,1,1,'P','P','P')
+      CALL PYDOF_INIT(N,1,1,'P','P','P',1)
 
       DX=2.0*PI/(N-1)
       DO I=1,N
@@ -14,8 +14,8 @@
        Y(I)=SIN(X(I))
       ENDDO
 
-      FY=FILTER(Y)
-      RY=FILTER_R(FY)
+      CALL FILTER(Y,FY)
+      CALL FILTER_R(FY,RY)
 
       OPEN(UNI=1,FILE='results.txt',STATUS='OLD',FORM='FORMATTED')
       WRITE(1,*) 'X','Y','FY','RY'

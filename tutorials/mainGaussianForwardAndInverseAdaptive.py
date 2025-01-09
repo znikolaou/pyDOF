@@ -26,7 +26,7 @@ print(coeffs)
 tdflt=ReconstructedTransferFunction(dflt, nVanCittert=70)
 
 #define inverse discrete filter
-vdflt=DiscreteFilter(wavenumber, nStencil=2*nsNominal+1)
+vdflt=DiscreteFilter(wavenumber, nStencil=2*nsNominal+1, isForward=False)
 
 #run optimiser for inverse filter
 iopt=Optimiser(tdflt, vdflt, isZeroDampingAtPi=True, isAdaptive=True)
@@ -36,7 +36,7 @@ VGTfunc=iopt.getSolution()
 print(vdflt.coeffs)
 
 #Output
-out=Output("./output/", "coeffs", flt, dflt, tdflt, vdflt)
+out=Output("./fortran/", "coeffs", flt, dflt, tdflt, vdflt)
 out.write()
 
 #Plot

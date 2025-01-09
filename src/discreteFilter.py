@@ -16,10 +16,11 @@ class DiscreteFilter(Log, Const):
     Author: Z. Nikolaou.
     """
 
-    def __init__(self, wavenumber,  nStencil=3):
+    def __init__(self, wavenumber,  nStencil=3, isForward=True):
         Log.__init__(self, type(self).__name__)
         self._wavenumber=wavenumber
         self._ns=nStencil
+        self._isForward=isForward
         self.__checkSymmetric()
         self._k=self._wavenumber.get()
         self._nk=len(self._k)
@@ -38,6 +39,9 @@ class DiscreteFilter(Log, Const):
             self.printError("_checkSufficientStencil",  \
                     "stencil size < 3")
             exit()
+
+    def isForward(self):
+        return self._isForward
 
     def getAllCoeffs(self):
         if(self.coeffs!=None):

@@ -2,34 +2,41 @@ from utils import *
 import datetime
 class FortranGenerator(Const):
     """
-    Class for generating a Fortran header file
-    containing the discrete filter coeffs. 
+    Class for generating a Fortran source code containing info 
+    on the discrete filter(s).  
 
     Attributes: 
-        path (string): path to store header file
-        filtersList (Discrete Filter []): list of DiscreteFilter objects
-        forwardOrInverseList (int []): integer list specifying 
-                                       forward (1) or inverse(0) filter
+        path (string): 
+            Path to store header file.
+        discreteFiltersList (Discrete Filter []):
+            List of DiscreteFilter objects.
 
     Author: Z. Nikolaou.
     """
-    def __init__(self, path, filtersList, forwardOrInverseList):
+    def __init__(self, path, discreteFiltersList):
         self._path=path
-        self._filtersList=filtersList
-        self._fORi=forwardOrInverseList
-        self._nFilters=len(filtersList)
-        self._ncMax=self.__getNcMax()
-        self.__fl=open(path+'/'+'pydof_common.h','w')
+        self._filtersList=discreteFiltersList
+        self._nFilters=len(self._filtersList)
+        self._ncList=self.__getNcList()
+        self._isForwardList=self.__getIsForwardList()
+        self.__fl=open(path+'/'+self.FORTRAN_HEADER,'w')
     
-    def __getNcMax(self):
-        return max([len(ob.coeffs) for ob in self._filtersList])
+    def __getNcList(self):
+        return [len(ob.coeffs) for ob in self._filtersList]
+
+    def __getIsForwardList(self):
+        return [1 if ob.isForward() else 0 for ob in self._filtersList]
 
     def generateHeader(self):
         NC='NC'
         NCMAX='NC_MAX'
+        NCMAXM1='NC_MAX_M1'
         NFILTERS='NFILTERS'
         COEFS='COEFS'
-        NCMAXM1=str(self._ncMax-1)
+
+        ncMax=max(self._ncList)
+        ncMaxM1=ncMax-1
+
         self.__writeComment('---------------------------')
         self.__writeComment('This code has been auto-generated:')
         self.__writeComment(str(datetime.datetime.now()))
@@ -37,46 +44,39 @@ class FortranGenerator(Const):
         self.__writeComment(self.LOGO)
         self.__writeComment('Author: Z. Nikolaou')
         self.__writeComment('---------------------------')
-        self.__writeLine('INTEGER '+NFILTERS+','+NCMAX)
+        self.__writeLine('INTEGER '+NFILTERS+','+NCMAX+','+NCMAXM1)
         self.__writeLine('PARAMETER('+NFILTERS+'='+str(self._nFilters) \
-                +','+NCMAX+'='+str(self._ncMax)+')')
+                                 +','+NCMAX+'='+str(ncMax) \
+                                 +','+NCMAXM1+'='+str(ncMaxM1)+')')
         self.__writeLine('INTEGER '+NC+'('+NFILTERS+')')
         self.__writeLine('INTEGER ISFORWARD('+NFILTERS+')')
-        self.__writeLine('DOUBLE PRECISION '+COEFS+'(0:'+NCMAXM1+','+NFILTERS+')')
-        
-
-        nmAll=[len(ob.coeffs) for ob in self._filtersList]
-        self.__writeParameters(NC,nmAll)
-
-        self.__writeParameters('ISFORWARD',self._fORi)
-        
+        self.__writeLine('DOUBLE PRECISION '+COEFS+'(0:'+NCMAXM1+','+ \
+                NFILTERS+')')
+        self.__writeData(NC,self._ncList)
+        self.__writeData('ISFORWARD',self._isForwardList)
+        #Filter coefs
         nFilters=len(self._filtersList)
+        coeffsArray=np.zeros(ncMax)
         for j in range(nFilters):
-            self.__writeLine('PARAMETER(')
             ob=self._filtersList[j]
-            nm=len(ob.coeffs)
-            for i in range(nm-1):
-                coeff=Const.NUM_FORMAT(ob.coeffs[i])
-                self.__writeContinuationLine(COEFS+\
-                        '('+str(i)+','+str(j+1)+')='+str(coeff)+',')
-            i=i+1
-            coeff=Const.NUM_FORMAT(ob.coeffs[nm-1])
-            self.__writeContinuationLine(COEFS+'('+str(i)+',' \
-                    +str(j+1)+')='+str(coeff)+')')
-
+            nc=self._ncList[j]
+            coeffsArray[:]=0.0e0
+            coeffsArray[0:nc]=ob.coeffs[0:nc]
+            self.__writeData(COEFS+'(:,'+str(j+1)+')', coeffsArray, \
+                    self.NUM_FORMAT)
         self.__writeComment('------END------')
         self.__fl.close()
 
-    def __writeParameters(self, string, varList):
-        self.__writeLine('PARAMETER(')
-        k=1
-        n=len(varList)
-        nm1=n-1
+    def __writeData(self, string, varList, fmt=None):
+        self.__writeLine('DATA '+string+'/')
+        nm1=len(varList)-1
         for i in range(nm1):
-            self.__writeContinuationLine(string+'('+str(k)+')='+str(varList[i])+',')
-            k=k+1
-        self.__writeContinuationLine(string+'('+str(k)+')='+str(varList[nm1])+')')
+            self.__writeContinuationLine(self.__getFormattedString(varList[i], fmt)+',')
+        self.__writeContinuationLine(self.__getFormattedString(varList[nm1], fmt)+'/')
 
+    def __getFormattedString(self, value, fmt=None):
+        return str(value) if fmt is None else str(fmt(value))
+        
     def __getLine(self, line):
         return '      '+line+'\n'
 
