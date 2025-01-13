@@ -41,7 +41,8 @@ print(vdflt.coeffs)
 #out.write()
 
 #Fortran code
-fCode=FortranGenerator('./fortran/',[dflt, vdflt, vdflt, dflt])
+fortranOutDir='../tests/fortran/'
+fCode=FortranGenerator(fortranOutDir, [dflt, vdflt, vdflt, dflt])
 fCode.generateHeader()
 
 

@@ -1,6 +1,6 @@
 !     ---------------------------
 !     This code has been auto-generated:
-!     2025-01-09 18:28:57.129405
+!     2025-01-13 15:28:18.328991
 !     
 !     PYDOF 2025.01
 !     Author: Z. Nikolaou
@@ -8,6 +8,7 @@
       INTEGER NFILTERS,NC_MAX,NC_MAX_M1
       PARAMETER(NFILTERS=4,NC_MAX=10,NC_MAX_M1=9)
       INTEGER NC(NFILTERS)
+      INTEGER NCM1(NFILTERS)
       INTEGER ISFORWARD(NFILTERS)
       DOUBLE PRECISION COEFS(0:NC_MAX_M1,NFILTERS)
       DATA NC/
@@ -15,6 +16,11 @@
      & 10,
      & 10,
      & 6/
+      DATA NCM1/
+     & 5,
+     & 9,
+     & 9,
+     & 5/
       DATA ISFORWARD/
      & 1,
      & 0,

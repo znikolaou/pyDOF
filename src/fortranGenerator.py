@@ -13,11 +13,15 @@ class FortranGenerator(Const):
 
     Author: Z. Nikolaou.
     """
+
+    # TODO: CLEAN-UP 
+
     def __init__(self, path, discreteFiltersList):
         self._path=path
         self._filtersList=discreteFiltersList
         self._nFilters=len(self._filtersList)
         self._ncList=self.__getNcList()
+        self._ncm1List=[i-1 for i in self._ncList]
         self._isForwardList=self.__getIsForwardList()
         self.__fl=open(path+'/'+self.FORTRAN_HEADER,'w')
     
@@ -29,6 +33,7 @@ class FortranGenerator(Const):
 
     def generateHeader(self):
         NC='NC'
+        NCM1='NCM1'
         NCMAX='NC_MAX'
         NCMAXM1='NC_MAX_M1'
         NFILTERS='NFILTERS'
@@ -49,10 +54,12 @@ class FortranGenerator(Const):
                                  +','+NCMAX+'='+str(ncMax) \
                                  +','+NCMAXM1+'='+str(ncMaxM1)+')')
         self.__writeLine('INTEGER '+NC+'('+NFILTERS+')')
+        self.__writeLine('INTEGER '+NCM1+'('+NFILTERS+')')
         self.__writeLine('INTEGER ISFORWARD('+NFILTERS+')')
         self.__writeLine('DOUBLE PRECISION '+COEFS+'(0:'+NCMAXM1+','+ \
                 NFILTERS+')')
         self.__writeData(NC,self._ncList)
+        self.__writeData(NCM1,self._ncm1List)
         self.__writeData('ISFORWARD',self._isForwardList)
         #Filter coefs
         nFilters=len(self._filtersList)

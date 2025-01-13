@@ -57,6 +57,17 @@
       
       END FUNCTION
       !-----------------------------------------------------------------
+      SUBROUTINE PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
+      IMPLICIT NONE
+      !INCLUDE "pydof_common.h"
+      INTEGER NX,NY,NZ
+      CHARACTER(LEN=1) BCX,BCY,BCZ
+
+
+
+      RETURN
+      END
+      !-----------------------------------------------------------------
       LOGICAL FUNCTION CHECK_BC(BC)
       IMPLICIT NONE
       CHARACTER(LEN=1) BC
@@ -119,9 +130,8 @@
       RETURN
       END
       !-----------------------------------------------------------------
-      SUBROUTINE PYDOF_INIT(NX,NY,NZ,BCX,BCY,BCZ,SRC)
+      SUBROUTINE PYDOF_INIT(NX,NY,NZ,BCX,BCY,BCZ)
       IMPLICIT NONE
-      CHARACTER(LEN=*) SRC
       INTEGER NX,NY,NZ
       CHARACTER(LEN=1) BCX,BCY,BCZ
 
@@ -130,10 +140,9 @@
       WRITE(*,*) 
       WRITE(*,*) 'Initialising filter ...'
       WRITE(*,*) 'Coefs src:'
-      WRITE(*,*) SRC 
+      !:WRITE(*,*) SRC 
       CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
       CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
-      !CALL PYDOF_READ_COEFS(SRC) 
       !CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ,IL,JL,KL)
       !CALL PYDOF_SET_DFILTER(NX,NY,NZ,IL,JL,KL) 
 

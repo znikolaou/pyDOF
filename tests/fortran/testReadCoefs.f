@@ -1,9 +1,0 @@
-      PROGRAM TEST_READ_COEFS
-      CHARACTER(LEN=*) SRC
-      PARAMETER(SRC='./coeffs.txt')
-      DOUBLE PRECISION FCOEFS(5),ICOEFS(5)
-
-      CALL PYDOF_READ_COEFS(SRC)
-      
-      STOP
-      END
