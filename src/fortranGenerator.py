@@ -27,7 +27,8 @@ class FortranGenerator(Const):
         self._INT='INTEGER'
         self._DBL='DOUBLE PRECISION'
         self._DATA='DATA'
-    
+        self._PRM='PARAMETER'
+
     def __getNcList(self):
         return [len(ob.coeffs) for ob in self._filtersList]
 
@@ -35,40 +36,44 @@ class FortranGenerator(Const):
         return [1 if ob.isForward() else 0 for ob in self._filtersList]
 
     def generateHeader(self):
-        NC='NCOEF'
-        NCM1='NCOEFM1'
-        NCMAX='NCMX'
-        NCMAXM1='NGMX'
-        NFILTERS='NF'
+        NCOEF='NCOEF'
+        NCOEFM1='NCOEFM1'
+        NCMX='NCMX'
+        NGMX='NGMX'
+        NF='NF'
         COEFS='COEFS'
-        NXMAX='1000000'
-        NYMAX=NXMAX
-        NZMAX=NXMAX
+        NXMX='NXMX'
+        NYMX='NYMX'
+        NZMX='NZMX'
+        nxmx=1000
 
         ncMax=max(self._ncList)
         ncMaxM1=ncMax-1
 
         self.__writeComment('----------------------------------')
         self.__writeComment('This code has been auto-generated:')
-        self.__writeComment(str(datetime.datetime.now()))
+        self.__writeComment(self.__buildDate())
         self.__writeComment('')
         self.__writeComment(self.LOGO)
         self.__writeComment('Author: Z. Nikolaou')
         self.__writeComment('----------------------------------')
 
-        self.__writeIntegers([NFILTERS, NCMAX, NCMAXM1])
-        self.__writeLine('PARAMETER('+NFILTERS+'='+str(self._nFilters) \
-                                 +','+NCMAX+'='+str(ncMax) \
-                                 +','+NCMAXM1+'='+str(ncMaxM1)+')')
-        self.__writeIntegerArray(NC, NFILTERS)
-        self.__writeIntegerArray(NCM1, NFILTERS)
-        self.__writeIntegerArray('ISFORWARD', NFILTERS)
-        self.__writeLine('DOUBLE PRECISION '+COEFS+'(0:'+NCMAXM1+','+ \
-                NFILTERS+')')
+        self.__writeIntegers([NF, NCMX, NGMX])
+        self.__writeParam(NF, str(self._nFilters))
+        self.__writeParam(NCMX, str(ncMax))
+        self.__writeParam(NGMX, str(ncMaxM1))
+        self.__writeIntegerArray(NCOEF, NF)
+        self.__writeIntegerArray(NCOEFM1, NF)
+        self.__writeIntegerArray('ISFORWARD', NF)
+        #todo:create double array method
+        self.__writeLine('DOUBLE PRECISION '+COEFS+'(0:'+NGMX+','+ \
+                NF+')')
 
-        self.__writeData(NC,self._ncList)
-        self.__writeData(NCM1,self._ncm1List)
+        self.__writeData(NCOEF,self._ncList)
+        self.__writeData(NCOEFM1,self._ncm1List)
         self.__writeData('ISFORWARD',self._isForwardList)
+
+        #todo: reformat/clean
         #Filter coefs
         nFilters=len(self._filtersList)
         coeffsArray=np.zeros(ncMax)
@@ -83,16 +88,24 @@ class FortranGenerator(Const):
         self.__writeComment('')
         self.__writeComment('COMMON BLOCK DATA')
         self.__writeComment('')
-        self.__writeLine('INTEGER '+'IL(-'+NCMAXM1+':'+NCMAXM1+','+NXMAX+')')
-        self.__writeLine('INTEGER '+'JL(-'+NCMAXM1+':'+NCMAXM1+','+NZMAX+')')
-        self.__writeLine('INTEGER '+'KL(-'+NCMAXM1+':'+NCMAXM1+','+NYMAX+')')       
-        self.__writeLine('DOUBLE PRECISION '+'COEFS_A(-'+NCMAXM1+':'+NCMAXM1+','+ \
-                                                     '-'+NCMAXM1+':'+NCMAXM1+','+ \
-                                                     '-'+NCMAXM1+':'+NCMAXM1+')')
+        self.__writeIntegers([NXMX,NYMX,NZMX])
+        self.__writeParam(NXMX, str(nxmx))
+        self.__writeParam(NYMX, str(nxmx))
+        self.__writeParam(NZMX, str(nxmx))
+
+        self.__writeLine('INTEGER '+'IL(-'+NGMX+':'+NGMX+','+NXMX+','+NF+')')
+        self.__writeLine('INTEGER '+'JL(-'+NGMX+':'+NGMX+','+NYMX+','+NF+')')
+        self.__writeLine('INTEGER '+'KL(-'+NGMX+':'+NGMX+','+NZMX+','+NF+')')       
+        self.__writeLine('DOUBLE PRECISION '+'COEFS_A(-'+NGMX+':'+NGMX+','+ \
+                                                     '-'+NGMX+':'+NGMX+','+ \
+                                                     '-'+NGMX+':'+NGMX+')')
         self.__writeLine('COMMON/PYDOF_COMM/ IL,JL,KL,COEFS_A')
         self.__writeComment('------END------')
         #close file
         self.__fl.close()
+
+    def __buildDate(self):
+        return str(datetime.datetime.now())
 
     def __writeData(self, string, varList, fmt=None):
         self.__writeLine(self._DATA+' '+string+'/')
@@ -126,6 +139,9 @@ class FortranGenerator(Const):
 
     def __writeDoubleArray(self, name, size):
         self.__writeLine(self._DBL+self.__wrapInPars(name, size))
+
+    def __writeParam(self, name, size):
+        return self.__writeLine(self._PRM+' ('+name+'='+size+')')
 
     def __buildCommaSeparated(self, stringList):
         string=' '+stringList[0]

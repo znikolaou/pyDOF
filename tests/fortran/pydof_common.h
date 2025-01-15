@@ -1,12 +1,14 @@
-!     ---------------------------
+!     ----------------------------------
 !     This code has been auto-generated:
-!     2025-01-15 11:09:53.541316
+!     2025-01-15 14:48:12.642613
 !     
 !     PYDOF 2025.01
 !     Author: Z. Nikolaou
-!     ---------------------------
+!     ----------------------------------
       INTEGER NF,NCMX,NGMX
-      PARAMETER(NF=4,NCMX=10,NGMX=9)
+      PARAMETER (NF=4)
+      PARAMETER (NCMX=10)
+      PARAMETER (NGMX=9)
       INTEGER NCOEF(NF)
       INTEGER NCOEFM1(NF)
       INTEGER ISFORWARD(NF)
@@ -73,9 +75,13 @@
 !     
 !     COMMON BLOCK DATA
 !     
-      INTEGER IL(-NGMX:NGMX,1000000)
-      INTEGER JL(-NGMX:NGMX,1000000)
-      INTEGER KL(-NGMX:NGMX,1000000)
+      INTEGER NXMX,NYMX,NZMX
+      PARAMETER (NXMX=1000)
+      PARAMETER (NYMX=1000)
+      PARAMETER (NZMX=1000)
+      INTEGER IL(-NGMX:NGMX,NXMX,NF)
+      INTEGER JL(-NGMX:NGMX,NYMX,NF)
+      INTEGER KL(-NGMX:NGMX,NZMX,NF)
       DOUBLE PRECISION COEFS_A(-NGMX:NGMX,-NGMX:NGMX,-NGMX:NGMX)
-      COMMON/PYDOF_COMMON/ IL,JL,KL,COEFS_A
+      COMMON/PYDOF_COMM/ IL,JL,KL,COEFS_A
 !     ------END------

@@ -18,52 +18,73 @@
       !
       !END
       !-----------------------------------------------------------------
-      INTEGER FUNCTION GET_NEIGHBOURS(BC, N, NM)
+      SUBROUTINE GET_NEIGH(CBCX,NX,NWRKX,NGX,NG,IL) 
       IMPLICIT NONE
-      CHARACTER(LEN=1) BC
-      INTEGER N,NM,I,IC,IS,IL(-NM:NM,N)
+      !GATHERS NEIGHBOURING POINTS OF A FUNCTION GIVEN THE NUMBER OF 
+      !POINTS LEFT AND RIGHT OF A POINT. THIS IS DONE AT ALL POINTS OF 
+      !THE FUNCTION. BOUNDARY CONDITIONS AS BELOW.
+      CHARACTER(LEN=1) CBCX
+      INTEGER NX,NWRKX,NG,NGX,I,IC,IS
+      INTEGER IL(-NG:NG,NWRKX)
+      !
   
-      IL(-NM:NM,1:N)=0
+      IL(-NG:NG,1:NWRKX)=0
 
-      IF(N.EQ.1) THEN
-       IL(-NM:NM,1:N)=1
+      !IF((NX.NE.1).AND(NG.GT.NX)) THEN
+      ! WRITE(*,*) 'GET_NEIGH: ERROR, NG > NX',NG,NX
+      ! STOP
+      !ENDIF
+      IF(NX.EQ.1) THEN
+       IL(-NG:NG,1:NX)=1
        RETURN
       ENDIF
 
       IS=0
-      DO I=1,N
+      DO I=1,NX
        IS=IS+1
-       DO IC=-NM,NM
+       DO IC=-NGX,NGX
         IL(IC,IS)=I+IC  
         IF(IL(IC,IS).LT.1) THEN
-         IF(BC.EQ.'P') THEN
-          IL(IC,IS)=N-MOD(-IL(IC,IS)+1,N)
-          !IL(IC,IS)=NX+IL(IC,IS)
-         ELSEIF(BC.EQ.'C') THEN
+         IF(CBCX.EQ.'P') THEN
+          !IL(IC,IS)=NX-MOD(-IL(IC,IS)+1,NX)
+          IL(IC,IS)=NX+IL(IC,IS)
+         ELSEIF(CBCX.EQ.'C') THEN
           IL(IC,IS)=1  
          ENDIF
         ENDIF          
-        IF(IL(IC,IS).GT.N) THEN
-         IF(BC.EQ.'P') THEN        
-          IL(IC,IS)=1+MOD(IL(IC,IS),N)
-          !IL(IC,IS)=IL(IC,IS)-NX
-         ELSEIF(BC.EQ.'C') THEN
-          IL(IC,IS)=N  
+        IF(IL(IC,IS).GT.NX) THEN
+         IF(CBCX.EQ.'P') THEN        
+          !IL(IC,IS)=1+MOD(IL(IC,IS),NX)
+          IL(IC,IS)=IL(IC,IS)-NX
+         ELSEIF(CBCX.EQ.'C') THEN
+          IL(IC,IS)=NX  
          ENDIF
         ENDIF              
-        IL(IC,IS)=MIN(MAX(IL(IC,IS),1),N)          
+        IL(IC,IS)=MIN(MAX(IL(IC,IS),1),NX)          
+        !WRITE(*,*) 'X',I,IC,IL(IC,IS)
        ENDDO
       ENDDO
       
-      END FUNCTION
+     
+      !
+      RETURN
+      END 
       !-----------------------------------------------------------------
       SUBROUTINE PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
       IMPLICIT NONE
       INCLUDE "pydof_common.h"
-      INTEGER NX,NY,NZ
+      INTEGER NX,NY,NZ,IFLT
       CHARACTER(LEN=1) BCX,BCY,BCZ
 
+      IL(-NGMX:NGMX,:,:)=0
+      JL(-NGMX:NGMX,:,:)=0
+      KL(-NGMX:NGMX,:,:)=0
 
+      DO IFLT=1,NF
+       CALL GET_NEIGH(BCX,NX,NXMX,NCOEFM1(IFLT),NGMX,IL(:,:,IFLT))
+       CALL GET_NEIGH(BCY,NY,NYMX,NCOEFM1(IFLT),NGMX,JL(:,:,IFLT))
+       CALL GET_NEIGH(BCZ,NZ,NZMX,NCOEFM1(IFLT),NGMX,KL(:,:,IFLT))
+      ENDDO
 
       RETURN
       END
@@ -142,7 +163,7 @@
        
       CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
       CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
-      !CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ,IL,JL,KL)
+      CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
       !CALL PYDOF_SET_DFILTER(NX,NY,NZ,IL,JL,KL)
 
        
