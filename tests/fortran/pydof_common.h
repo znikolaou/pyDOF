@@ -1,22 +1,22 @@
 !     ---------------------------
 !     This code has been auto-generated:
-!     2025-01-13 15:28:18.328991
+!     2025-01-15 11:09:53.541316
 !     
 !     PYDOF 2025.01
 !     Author: Z. Nikolaou
 !     ---------------------------
-      INTEGER NFILTERS,NC_MAX,NC_MAX_M1
-      PARAMETER(NFILTERS=4,NC_MAX=10,NC_MAX_M1=9)
-      INTEGER NC(NFILTERS)
-      INTEGER NCM1(NFILTERS)
-      INTEGER ISFORWARD(NFILTERS)
-      DOUBLE PRECISION COEFS(0:NC_MAX_M1,NFILTERS)
-      DATA NC/
+      INTEGER NF,NCMX,NGMX
+      PARAMETER(NF=4,NCMX=10,NGMX=9)
+      INTEGER NCOEF(NF)
+      INTEGER NCOEFM1(NF)
+      INTEGER ISFORWARD(NF)
+      DOUBLE PRECISION COEFS(0:NGMX,NF)
+      DATA NCOEF/
      & 6,
      & 10,
      & 10,
      & 6/
-      DATA NCM1/
+      DATA NCOEFM1/
      & 5,
      & 9,
      & 9,
@@ -70,4 +70,12 @@
      & 0.0000000000000000e+00,
      & 0.0000000000000000e+00,
      & 0.0000000000000000e+00/
+!     
+!     COMMON BLOCK DATA
+!     
+      INTEGER IL(-NGMX:NGMX,1000000)
+      INTEGER JL(-NGMX:NGMX,1000000)
+      INTEGER KL(-NGMX:NGMX,1000000)
+      DOUBLE PRECISION COEFS_A(-NGMX:NGMX,-NGMX:NGMX,-NGMX:NGMX)
+      COMMON/PYDOF_COMMON/ IL,JL,KL,COEFS_A
 !     ------END------
