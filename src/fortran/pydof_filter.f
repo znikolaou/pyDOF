@@ -206,22 +206,13 @@
       END
       !----------------------------------------------------------------
       SUBROUTINE GET_NEIGH(CBCX,NX,NWRKX,NGX,NG,IL) 
-      !TODO: REFACTOR
+      !TODO: REFACTOR + CHECK IMPLEMENTATION OF PERIOD CONDITIONS!
       IMPLICIT NONE
-      !GATHERS NEIGHBOURING POINTS OF A FUNCTION GIVEN THE NUMBER OF 
-      !POINTS LEFT AND RIGHT OF A POINT. THIS IS DONE AT ALL POINTS OF 
-      !THE FUNCTION. BOUNDARY CONDITIONS AS BELOW.
       CHARACTER(LEN=1) CBCX
-      INTEGER NX,NWRKX,NG,NGX,I,IC,IS
-      INTEGER IL(-NG:NG,NWRKX)
-      !
-  
+      INTEGER NX,NWRKX,NGX,NG,I,IC,IS,IL(-NG:NG,NWRKX)
+      
       IL(-NG:NG,1:NWRKX)=0
 
-      !IF((NX.NE.1).AND(NG.GT.NX)) THEN
-      ! WRITE(*,*) 'GET_NEIGH: ERROR, NG > NX',NG,NX
-      ! STOP
-      !ENDIF
       IF(NX.EQ.1) THEN
        IL(-NG:NG,1:NX)=1
        RETURN
@@ -229,26 +220,26 @@
 
       IS=0
       DO I=1,NX
-       IS=IS+1
+       !IS=IS+1
        DO IC=-NGX,NGX
-        IL(IC,IS)=I+IC  
-        IF(IL(IC,IS).LT.1) THEN
+        IL(IC,I)=I+IC  
+        IF(IL(IC,I).LT.1) THEN
          IF(CBCX.EQ.'P') THEN
-          IL(IC,IS)=NX-MOD(-IL(IC,IS)+1,NX)
+          IL(IC,I)=NX-MOD(-IL(IC,I)+1,NX)
           !IL(IC,IS)=NX+IL(IC,IS)
          ELSEIF(CBCX.EQ.'C') THEN
-          IL(IC,IS)=1  
+          IL(IC,I)=1  
          ENDIF
         ENDIF          
-        IF(IL(IC,IS).GT.NX) THEN
+        IF(IL(IC,I).GT.NX) THEN
          IF(CBCX.EQ.'P') THEN        
-          IL(IC,IS)=1+MOD(IL(IC,IS),NX)
+          IL(IC,I)=1+MOD(IL(IC,I),NX)
           !IL(IC,IS)=IL(IC,IS)-NX
          ELSEIF(CBCX.EQ.'C') THEN
-          IL(IC,IS)=NX  
+          IL(IC,I)=NX  
          ENDIF
         ENDIF              
-        IL(IC,IS)=MIN(MAX(IL(IC,IS),1),NX)          
+        IL(IC,I)=MIN(MAX(IL(IC,I),1),NX)          
         !WRITE(*,*) 'X',I,IC,IL(IC,IS)
        ENDDO
       ENDDO

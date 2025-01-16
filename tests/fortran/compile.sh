@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm go*
+rm go* log* data*
 
 $PYDOF_FCOMPILER $PYDOF_FOPTIONS -o goTestChecks testChecks.f $PYDOF_FORTRAN_SRC/pydof_filter.f -I/$PWD
 $PYDOF_FCOMPILER $PYDOF_FOPTIONS -o goTestHeaderFile testHeaderFile.f 
