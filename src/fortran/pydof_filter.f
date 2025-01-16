@@ -29,12 +29,13 @@
       INCLUDE 'pydof_common.h'
       INTEGER NDIM,I,J,K,IFLT,NG
     
-      COEFS_A(:,:,:,:)=0.0E0
+      COEFS_A(:,:,:,:)=0.0D0
       
-      IF(NDIM.EQ.3) THEN
 
+      IF(NDIM.EQ.3) THEN
+              
       DO IFLT=1,NF 
-       NG=NCOEFM1(IFLT)
+      NG=NCOEFM1(IFLT)
        DO K=-NG,NG
         DO J=-NG,NG
          DO I=-NG,NG
@@ -80,7 +81,7 @@
       !INCLUDE 'omp_lib.h'
       INCLUDE 'pydof_common.h'
       INTEGER IFLT,NX,NY,NZ,I,J,K,TID,NCHECK
-      DOUBLE PRECISION VAR(NX,NY,NZ),FVAR(NX,NY,NZ),FV
+      DOUBLE PRECISION VAR(NX,NY,NZ),FVAR(NX,NY,NZ)
 
        
        !$OMP PARALLEL DEFAULT(SHARED) 
@@ -92,9 +93,7 @@
       DO K=1,NZ
        DO J=1,NY
         DO I=1,NX                 
-         CALL FILTP(IFLT,I,J,K,NX,NY,NZ,VAR,FV)
-         WRITE(*,*) 'test',FV
-         FVAR(I,J,K)=FV
+         CALL FILTP(IFLT,I,J,K,NX,NY,NZ,VAR,FVAR(I,J,K))
         ENDDO
        ENDDO
       ENDDO
@@ -125,11 +124,11 @@
       !
       IMPLICIT NONE
       INCLUDE 'pydof_common.h'
-      INTEGER IFLT,I,J,K,NX,NY,NZ,NMX,NMY,NMZ,NCOR1(3)
+      INTEGER IFLT,I,J,K,NX,NY,NZ
       DOUBLE PRECISION V(NX,NY,NZ),FV,DUM
       INTEGER IC,JC,KC,IP,IM,JP,JM,KP,KM
      
-      FV=0.0E0
+      FV=0.0D0
       FV=COEFS_A(0,0,0,IFLT)*V(I,J,K)
       !1D-X
       DO IC=1,NCM1OR1(1,IFLT)
@@ -209,7 +208,7 @@
       !TODO: REFACTOR + CHECK IMPLEMENTATION OF PERIOD CONDITIONS!
       IMPLICIT NONE
       CHARACTER(LEN=1) CBCX
-      INTEGER NX,NWRKX,NGX,NG,I,IC,IS,IL(-NG:NG,NWRKX)
+      INTEGER NX,NWRKX,NG,NGX,I,IC,IS,IL(-NG:NG,NWRKX)
       
       IL(-NG:NG,1:NWRKX)=0
 
@@ -224,28 +223,27 @@
        DO IC=-NGX,NGX
         IL(IC,I)=I+IC  
         IF(IL(IC,I).LT.1) THEN
-         IF(CBCX.EQ.'P') THEN
+         IF(CBCX.EQ.'CP') THEN
           IL(IC,I)=NX-MOD(-IL(IC,I)+1,NX)
-          !IL(IC,IS)=NX+IL(IC,IS)
-         ELSEIF(CBCX.EQ.'C') THEN
+         ELSEIF(CBCX.EQ.'DP') THEN
+          IL(IC,I)=NX+IL(IC,I)
+         ELSEIF(CBCX.EQ.'DI') THEN
           IL(IC,I)=1  
          ENDIF
         ENDIF          
         IF(IL(IC,I).GT.NX) THEN
-         IF(CBCX.EQ.'P') THEN        
+         IF(CBCX.EQ.'CP') THEN        
           IL(IC,I)=1+MOD(IL(IC,I),NX)
-          !IL(IC,IS)=IL(IC,IS)-NX
-         ELSEIF(CBCX.EQ.'C') THEN
+         ELSEIF(CBCX.EQ.'DP') THEN
+          IL(IC,I)=IL(IC,I)-NX
+         ELSEIF(CBCX.EQ.'DI') THEN
           IL(IC,I)=NX  
          ENDIF
         ENDIF              
         IL(IC,I)=MIN(MAX(IL(IC,I),1),NX)          
-        !WRITE(*,*) 'X',I,IC,IL(IC,IS)
        ENDDO
       ENDDO
       
-     
-      !
       RETURN
       END 
       !-----------------------------------------------------------------
@@ -270,9 +268,9 @@
       !-----------------------------------------------------------------
       LOGICAL FUNCTION CHECK_BC(BC)
       IMPLICIT NONE
-      CHARACTER(LEN=1) BC
+      CHARACTER(LEN=2) BC
       
-      IF(BC.EQ.'C'.OR.BC.EQ.'P') THEN
+      IF(BC.EQ.'CP'.OR.BC.EQ.'DP'.OR.BC.EQ.'DI') THEN
        CHECK_BC=.TRUE.
       ELSE
        CHECK_BC=.FALSE.
@@ -301,12 +299,18 @@
 
       IF(.NOT.CHECK_POSITIVE(NX)) THEN
        WRITE(*,*) MSG,'NX<=0, NX=',NX
+       WRITE(*,*) 'TERMINATING ...'
+       STOP
       ENDIF
       IF(.NOT.CHECK_POSITIVE(NY)) THEN
        WRITE(*,*) MSG,'NY<=0, NY=',NY
+       WRITE(*,*) 'TERMINATING ...'
+       STOP
       ENDIF
       IF(.NOT.CHECK_POSITIVE(NZ)) THEN
        WRITE(*,*) MSG,'NZ<=0, NZ=',NZ
+       WRITE(*,*) 'TERMINATING ...'
+       STOP
       ENDIF
 
       RETURN
@@ -317,14 +321,20 @@
       CHARACTER(LEN=*) MSG
       PARAMETER(MSG='ERROR! PYDOF_CHECK_BCS:')
       LOGICAL CHECK_BC
-      CHARACTER(LEN=1) BCX,BCY,BCZ
+      CHARACTER(LEN=2) BCX,BCY,BCZ
 
       IF(.NOT.CHECK_BC(BCX)) THEN
-       WRITE(*,*) MSG,'BCX != C OR P, BCX=',BCX  
+       WRITE(*,*) MSG,'BCX != CP OR DP OR DI: BCX=',BCX  
+       WRITE(*,*) 'TERMINATING ...'
+       STOP
       ELSE IF(.NOT.CHECK_BC(BCY)) THEN   
-       WRITE(*,*) MSG,'BCY != C OR P, BCY=',BCY
+       WRITE(*,*) MSG,'BCY != CP OR DP OR DI: BCY=',BCY
+       WRITE(*,*) 'TERMINATING ...'
+       STOP
       ELSE IF(.NOT.CHECK_BC(BCZ)) THEN    
-       WRITE(*,*) MSG,'BCZ != C OR P, BCZ=',BCZ     
+       WRITE(*,*) MSG,'BCZ != CP OR DP OR DI: BCZ=',BCZ     
+       WRITE(*,*) 'TERMINATING ...'
+       STOP
       ENDIF
 
       RETURN
@@ -332,22 +342,30 @@
       !-----------------------------------------------------------------
       SUBROUTINE PYDOF_INIT(NX,NY,NZ,BCX,BCY,BCZ)
       IMPLICIT NONE
+      INCLUDE 'pydof_common.h'
       INTEGER NX,NY,NZ,NDIM,PYDOF_GET_DIM
-      CHARACTER(LEN=1) BCX,BCY,BCZ
+      CHARACTER(LEN=2) BCX,BCY,BCZ
 
       WRITE(*,*) 
-      WRITE(*,*) '***********PYDOF***********'
+      WRITE(*,'(A)') '***********PYDOF*********************************'
       WRITE(*,*) 
-      WRITE(*,*) ' Initialising filter ...'
-       
       CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
       NDIM=PYDOF_GET_DIM(NX,NY,NZ)
+      WRITE(*,'(A)') 'DIMENSIONS CHECK: OK.' 
+      WRITE(*,'(AXI1)') 'DIMENSION=',NDIM
       CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
+      WRITE(*,'(A)') 'BCS CHECK: OK.' 
       CALL PYDOF_SET_NCM1OR1(NDIM)
       CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
+      WRITE(*,'(A)') 'BCS INDICES SET.' 
       CALL PYDOF_SET_COEFS_A(NDIM)
-      
-      WRITE(*,*) '***********PYDOF***********'
+      WRITE(*,'(AXI1)') 'NO OF DISCRETE FILTERS=',NF
+      WRITE(*,'(3(AXI5X))') 'MAX ARRAY SIZE',NXMX,'x',NYMX,'x',NZMX
+      WRITE(*,*)
+      WRITE(*,'(A)') 'DISCRETE FILTER(S) INITIALISED!'
+      WRITE(*,*) 
+      WRITE(*,'(A)') '***********PYDOF*********************************'
+      WRITE(*,*) 
  
       END
       !-----------------------------------------------------------------
