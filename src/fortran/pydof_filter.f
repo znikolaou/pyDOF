@@ -82,8 +82,9 @@
       INCLUDE 'pydof_common.h'
       INTEGER IFLT,NX,NY,NZ,I,J,K,TID,NCHECK
       DOUBLE PRECISION VAR(NX,NY,NZ),FVAR(NX,NY,NZ)
-
-       
+      !
+      !TODO: IMPLEMENT OMP! 
+      ! 
        !$OMP PARALLEL DEFAULT(SHARED) 
        !$OMP& PRIVATE(TID,NCHECK,I,J,K,FV)
       !TID=OMP_GET_THREAD_NUM()
@@ -205,7 +206,6 @@
       END
       !----------------------------------------------------------------
       SUBROUTINE GET_NEIGH(CBCX,NX,NWRKX,NGX,NG,IL) 
-      !TODO: REFACTOR + CHECK IMPLEMENTATION OF PERIOD CONDITIONS!
       IMPLICIT NONE
       CHARACTER(LEN=1) CBCX
       INTEGER NX,NWRKX,NG,NGX,I,IC,IS,IL(-NG:NG,NWRKX)

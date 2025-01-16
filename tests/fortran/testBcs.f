@@ -4,8 +4,7 @@
       INTEGER I,J,K,NX
       PARAMETER(NX=20)
       
-      WRITE(*,*) 'CONTINUOUS'
-      CALL PYDOF_INIT(NX,1,1,'C','C','C')
+      CALL PYDOF_INIT(NX,1,1,'DI','DI','DI')
 
       DO K=1,NF
         WRITE(*,*) 'FILTER=',K
@@ -17,8 +16,7 @@
        ENDDO
       ENDDO
 
-      WRITE(*,*) 'PERIODIC'
-      CALL PYDOF_INIT(NX,1,1,'P','P','P')
+      CALL PYDOF_INIT(NX,1,1,'CP','CP','CP')
 
       DO K=1,NF
         WRITE(*,*) 'FILTER=',K
