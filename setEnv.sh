@@ -5,7 +5,7 @@ PYDOF_FORTRAN_SRC=$PYDOF_SRC/fortran/
 PYDOF_TUTORIALS=$PYDOF/tutorials/
 #
 PYDOF_FCOMPILER=gfortran 
-PYDOF_FOPTIONS='-O3 -mcmodel=large'
+PYDOF_FOPTIONS='-fopenmp -O3 -mcmodel=large -fcheck=all'
 
 echo 'PYDOF:'
 echo $PYDOF

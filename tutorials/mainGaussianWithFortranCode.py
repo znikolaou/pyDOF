@@ -11,14 +11,14 @@ from fortranGenerator import *
 wavenumber=Wavenumber()
 
 #define Gaussian filter having Delta/h 4
-flt=Gaussian(wavenumber, 4.0)
+flt=Gaussian(wavenumber, 8.0)
 nsNominal=flt.getNominalStencil()
 
 #define discrete filter
 dflt=DiscreteFilter(wavenumber, nStencil=11)
 
 #run optimiser for forward filter
-opt=Optimiser(flt, dflt, isZeroDampingAtPi=True, isAdaptive=False)
+opt=Optimiser(flt, dflt, isZeroDampingAtPi=True, isAdaptive=True)
 opt.run()
 coeffs=dflt.coeffs
 print(coeffs)
@@ -42,7 +42,7 @@ print(vdflt.coeffs)
 
 #Fortran code
 fortranOutDir='../tests/fortran/'
-fCode=FortranGenerator(fortranOutDir, [dflt, vdflt, vdflt, dflt])
+fCode=FortranGenerator(fortranOutDir, [dflt, vdflt])
 fCode.generateHeader()
 
 

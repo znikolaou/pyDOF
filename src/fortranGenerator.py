@@ -45,6 +45,7 @@ class FortranGenerator(Const):
         NXMX='NXMX'
         NYMX='NYMX'
         NZMX='NZMX'
+        NCM1OR1='NCM1OR1'
         nxmx=1000
 
         ncMax=max(self._ncList)
@@ -92,14 +93,14 @@ class FortranGenerator(Const):
         self.__writeParam(NXMX, str(nxmx))
         self.__writeParam(NYMX, str(nxmx))
         self.__writeParam(NZMX, str(nxmx))
-
+        self.__writeLine('INTEGER '+NCM1OR1+'('+str(3)+','+NF+')')
         self.__writeLine('INTEGER '+'IL(-'+NGMX+':'+NGMX+','+NXMX+','+NF+')')
         self.__writeLine('INTEGER '+'JL(-'+NGMX+':'+NGMX+','+NYMX+','+NF+')')
         self.__writeLine('INTEGER '+'KL(-'+NGMX+':'+NGMX+','+NZMX+','+NF+')')       
         self.__writeLine('DOUBLE PRECISION '+'COEFS_A(-'+NGMX+':'+NGMX+','+ \
                                                      '-'+NGMX+':'+NGMX+','+ \
-                                                     '-'+NGMX+':'+NGMX+')')
-        self.__writeLine('COMMON/PYDOF_COMM/ IL,JL,KL,COEFS_A')
+                                                     '-'+NGMX+':'+NGMX+',NF'+')')
+        self.__writeLine('COMMON/PYDOF_COMM/ IL,JL,KL,COEFS_A,'+NCM1OR1)
         self.__writeComment('------END------')
         #close file
         self.__fl.close()
