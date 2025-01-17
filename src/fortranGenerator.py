@@ -16,9 +16,11 @@ class FortranGenerator(Const):
 
     # TODO: CLEAN-UP 
 
-    def __init__(self, path, discreteFiltersList):
+    def __init__(self, path, discreteFiltersList, \
+            maxArraySizeList=[10000, 10000, 10000]):
         self._path=path
         self._filtersList=discreteFiltersList
+        self._maxArraySizeList=maxArraySizeList
         self._nFilters=len(self._filtersList)
         self._ncList=self.__getNcList()
         self._ncm1List=[i-1 for i in self._ncList]
@@ -46,8 +48,10 @@ class FortranGenerator(Const):
         NYMX='NYMX'
         NZMX='NZMX'
         NCM1OR1='NCM1OR1'
-        nxmx=1000
-
+        nxmx=self._maxArraySizeList[0]
+        nymx=self._maxArraySizeList[1]
+        nzmx=self._maxArraySizeList[2]
+        
         ncMax=max(self._ncList)
         ncMaxM1=ncMax-1
 
@@ -91,8 +95,8 @@ class FortranGenerator(Const):
         self.__writeComment('')
         self.__writeIntegers([NXMX,NYMX,NZMX])
         self.__writeParam(NXMX, str(nxmx))
-        self.__writeParam(NYMX, str(nxmx))
-        self.__writeParam(NZMX, str(nxmx))
+        self.__writeParam(NYMX, str(nymx))
+        self.__writeParam(NZMX, str(nzmx))
         self.__writeLine('INTEGER '+NCM1OR1+'('+str(3)+','+NF+')')
         self.__writeLine('INTEGER '+'IL(-'+NGMX+':'+NGMX+','+NXMX+','+NF+')')
         self.__writeLine('INTEGER '+'JL(-'+NGMX+':'+NGMX+','+NYMX+','+NF+')')

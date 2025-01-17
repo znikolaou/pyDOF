@@ -1,6 +1,6 @@
 !     ----------------------------------
 !     This code has been auto-generated:
-!     2025-01-16 12:41:01.441365
+!     2025-01-17 09:15:57.355826
 !     
 !     PYDOF 2025.01
 !     Author: Z. Nikolaou
@@ -66,9 +66,9 @@
 !     COMMON BLOCK DATA
 !     
       INTEGER NXMX,NYMX,NZMX
-      PARAMETER (NXMX=1000)
-      PARAMETER (NYMX=1000)
-      PARAMETER (NZMX=1000)
+      PARAMETER (NXMX=10000)
+      PARAMETER (NYMX=10000)
+      PARAMETER (NZMX=10000)
       INTEGER NCM1OR1(3,NF)
       INTEGER IL(-NGMX:NGMX,NXMX,NF)
       INTEGER JL(-NGMX:NGMX,NYMX,NF)

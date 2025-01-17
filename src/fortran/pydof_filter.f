@@ -31,7 +31,6 @@
     
       COEFS_A(:,:,:,:)=0.0D0
       
-
       IF(NDIM.EQ.3) THEN
               
       DO IFLT=1,NF 
@@ -207,8 +206,8 @@
       !----------------------------------------------------------------
       SUBROUTINE GET_NEIGH(CBCX,NX,NWRKX,NGX,NG,IL) 
       IMPLICIT NONE
-      CHARACTER(LEN=1) CBCX
-      INTEGER NX,NWRKX,NG,NGX,I,IC,IS,IL(-NG:NG,NWRKX)
+      CHARACTER(LEN=2) CBCX
+      INTEGER NX,NWRKX,NG,NGX,I,IC,IL(-NG:NG,NWRKX)
       
       IL(-NG:NG,1:NWRKX)=0
 
@@ -217,9 +216,7 @@
        RETURN
       ENDIF
 
-      IS=0
       DO I=1,NX
-       !IS=IS+1
        DO IC=-NGX,NGX
         IL(IC,I)=I+IC  
         IF(IL(IC,I).LT.1) THEN
@@ -251,7 +248,7 @@
       IMPLICIT NONE
       INCLUDE "pydof_common.h"
       INTEGER NX,NY,NZ,IFLT
-      CHARACTER(LEN=1) BCX,BCY,BCZ
+      CHARACTER(LEN=2) BCX,BCY,BCZ
 
       IL(-NGMX:NGMX,:,:)=0
       JL(-NGMX:NGMX,:,:)=0

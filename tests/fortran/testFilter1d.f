@@ -16,7 +16,7 @@
        FYA(I)=Y(I)*EXP(-DELTA**2.0*K**2.0/24.0)
       ENDDO
 
-      CALL PYDOF_INIT(N,1,1,'P','P','P')
+      CALL PYDOF_INIT(N,1,1,'CP','CP','CP')
       CALL PYDOF_FILTER(1,N,1,1,Y,FY)
       OPEN(UNIT=1,FILE='data.txt',STATUS='NEW',FORM='FORMATTED')
       WRITE(1,*) 'x,','y,','fy,','fya'
