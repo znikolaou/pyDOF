@@ -242,25 +242,106 @@
       ENDDO
       
       RETURN
+      END
+      !-----------------------------------------------------------------
+      SUBROUTINE SET_BC_LR(BCL,BCR,NX,NWRKX,NG,I,IC,IL)
+      IMPLICIT NONE
+      CHARACTER(LEN=2) BCL,BCR
+      INTEGER NX,NWRKX,NG,I,IC,IL(-NG:NG,NWRKX)
+         
+      IF(IL(IC,I).GE.1.AND.IL(IC,I).LE.NX) THEN
+       RETURN
+      ENDIF
+      
+      IF(IL(IC,I).LT.1) THEN
+       IF(BCL.EQ.'CP') THEN
+        IL(IC,I)=NX-MOD(-IL(IC,I)+1,NX)
+       ELSEIF(BCL.EQ.'DP') THEN
+        IL(IC,I)=NX+IL(IC,I)
+       ELSEIF(BCL.EQ.'DI') THEN
+        IL(IC,I)=1  
+       ENDIF
+      ENDIF
+
+      IF(IL(IC,I).GT.NX) THEN
+       IF(BCR.EQ.'CP') THEN        
+        IL(IC,I)=1+MOD(IL(IC,I),NX)
+       ELSEIF(BCR.EQ.'DP') THEN
+        IL(IC,I)=IL(IC,I)-NX
+       ELSEIF(BCR.EQ.'DI') THEN
+        IL(IC,I)=NX  
+       ENDIF
+      ENDIF 
+
+      RETURN
+      END     
+      !-----------------------------------------------------------------
+      SUBROUTINE GET_NEIGH_LR(BC,NX,NWRKX,NGX,NG,IL) 
+      IMPLICIT NONE
+      CHARACTER(LEN=2) BC(2)
+      INTEGER NX,NWRKX,NG,NGX,I,IC,IL(-NG:NG,NWRKX)
+      
+      IL(-NG:NG,1:NWRKX)=0
+
+      IF(NX.EQ.1) THEN
+       IL(-NG:NG,1:NX)=1
+       RETURN
+      ENDIF
+
+      !TODO: OMP 
+      DO I=1,NX
+       DO IC=-NGX,NGX
+        IL(IC,I)=I+IC 
+        CALL SET_BC_LR(BC(1),BC(2),NX,NWRKX,NG,I,IC,IL)
+        !IL(IC,I)=MIN(MAX(IL(IC,I),1),NX)  
+       ENDDO
+      ENDDO      
+         
+      RETURN
       END 
       !-----------------------------------------------------------------
       SUBROUTINE PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
       IMPLICIT NONE
       INCLUDE "pydof_common.h"
       INTEGER NX,NY,NZ,IFLT
-      CHARACTER(LEN=2) BCX,BCY,BCZ
+      CHARACTER(LEN=2) BCX(2),BCY(2),BCZ(2)
 
       IL(-NGMX:NGMX,:,:)=0
       JL(-NGMX:NGMX,:,:)=0
       KL(-NGMX:NGMX,:,:)=0
 
       DO IFLT=1,NF
-       CALL GET_NEIGH(BCX,NX,NXMX,NCOEFM1(IFLT),NGMX,IL(:,:,IFLT))
-       CALL GET_NEIGH(BCY,NY,NYMX,NCOEFM1(IFLT),NGMX,JL(:,:,IFLT))
-       CALL GET_NEIGH(BCZ,NZ,NZMX,NCOEFM1(IFLT),NGMX,KL(:,:,IFLT))
+       CALL GET_NEIGH_LR(BCX,NX,NXMX,NCOEFM1(IFLT),NGMX,IL(:,:,IFLT))
+       CALL GET_NEIGH_LR(BCY,NY,NYMX,NCOEFM1(IFLT),NGMX,JL(:,:,IFLT))
+       CALL GET_NEIGH_LR(BCZ,NZ,NZMX,NCOEFM1(IFLT),NGMX,KL(:,:,IFLT))
       ENDDO
 
       RETURN
+      END
+      !-----------------------------------------------------------------
+      SUBROUTINE CHECK_WRK_SIZE(N,NMAX,CN,CNMAX)
+      IMPLICIT NONE
+      INTEGER N,NMAX
+      CHARACTER(LEN=*) CN,CNMAX
+
+      IF(N.GT.NMAX) THEN
+       WRITE(*,*) 'ERROR ',CN,'>',CNMAX,':',CN,'=', N,CNMAX,'=',NMAX
+       WRITE(*,*) 'INCREASE ARRAY SIZE IN pydof_common.h AND RECOMPILE!'
+       WRITE(*,*) 'PYDOF TERMINATING ...'
+       STOP
+      ENDIF
+
+      END
+      !-----------------------------------------------------------------
+      SUBROUTINE PYDOF_CHECK_WRK_SIZE(NX,NY,NZ)
+      IMPLICIT NONE
+      INCLUDE "pydof_common.h"
+      INTEGER NX,NY,NZ
+      
+      CALL CHECK_WRK_SIZE(NX,NXMX,'NX','NXMX')
+      CALL CHECK_WRK_SIZE(NY,NYMX,'NY','NYMX')
+      CALL CHECK_WRK_SIZE(NZ,NZMX,'NZ','NZMX')
+     
       END
       !-----------------------------------------------------------------
       LOGICAL FUNCTION CHECK_BC(BC)
@@ -318,21 +399,24 @@
       CHARACTER(LEN=*) MSG
       PARAMETER(MSG='ERROR! PYDOF_CHECK_BCS:')
       LOGICAL CHECK_BC
-      CHARACTER(LEN=2) BCX,BCY,BCZ
+      CHARACTER(LEN=2) BCX(2),BCY(2),BCZ(2)
+      INTEGER I
 
-      IF(.NOT.CHECK_BC(BCX)) THEN
-       WRITE(*,*) MSG,'BCX != CP OR DP OR DI: BCX=',BCX  
-       WRITE(*,*) 'TERMINATING ...'
-       STOP
-      ELSE IF(.NOT.CHECK_BC(BCY)) THEN   
-       WRITE(*,*) MSG,'BCY != CP OR DP OR DI: BCY=',BCY
-       WRITE(*,*) 'TERMINATING ...'
-       STOP
-      ELSE IF(.NOT.CHECK_BC(BCZ)) THEN    
-       WRITE(*,*) MSG,'BCZ != CP OR DP OR DI: BCZ=',BCZ     
-       WRITE(*,*) 'TERMINATING ...'
-       STOP
-      ENDIF
+      DO I=1,2
+       IF(.NOT.CHECK_BC(BCX(I))) THEN
+        WRITE(*,*) MSG,'BCX != CP OR DP OR DI: BCX=',BCX(I)  
+        WRITE(*,*) 'TERMINATING ...'
+        STOP
+       ELSE IF(.NOT.CHECK_BC(BCY(I))) THEN   
+        WRITE(*,*) MSG,'BCY != CP OR DP OR DI: BCY=',BCY(I)
+        WRITE(*,*) 'TERMINATING ...'
+        STOP
+       ELSE IF(.NOT.CHECK_BC(BCZ(I))) THEN    
+        WRITE(*,*) MSG,'BCZ != CP OR DP OR DI: BCZ=',BCZ(I)  
+        WRITE(*,*) 'TERMINATING ...'
+        STOP
+       ENDIF
+      ENDDO
 
       RETURN
       END
@@ -341,12 +425,13 @@
       IMPLICIT NONE
       INCLUDE 'pydof_common.h'
       INTEGER NX,NY,NZ,NDIM,PYDOF_GET_DIM
-      CHARACTER(LEN=2) BCX,BCY,BCZ
+      CHARACTER(LEN=2) BCX(2),BCY(2),BCZ(2)
 
       WRITE(*,*) 
-      WRITE(*,'(A)') '***********PYDOF*********************************'
+      WRITE(*,'(A)') '*********************PYDOF*********************'
       WRITE(*,*) 
       CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
+      CALL PYDOF_CHECK_WRK_SIZE(NX,NY,NZ)
       NDIM=PYDOF_GET_DIM(NX,NY,NZ)
       WRITE(*,'(A)') 'DIMENSIONS CHECK: OK.' 
       WRITE(*,'(AXI1)') 'DIMENSION=',NDIM
@@ -360,8 +445,8 @@
       WRITE(*,'(3(AXI5X))') 'MAX ARRAY SIZE',NXMX,'x',NYMX,'x',NZMX
       WRITE(*,*)
       WRITE(*,'(A)') 'DISCRETE FILTER(S) INITIALISED!'
-      WRITE(*,*) 
-      WRITE(*,'(A)') '***********PYDOF*********************************'
+      WRITE(*,*)
+      WRITE(*,'(A)') '*********************PYDOF*********************' 
       WRITE(*,*) 
  
       END
