@@ -83,7 +83,9 @@
       DOUBLE PRECISION VAR(NX,NY,NZ),FVAR(NX,NY,NZ)
       !
       !TODO: IMPLEMENT OMP! 
-      ! 
+      !
+      !CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
+    
        !$OMP PARALLEL DEFAULT(SHARED) 
        !$OMP& PRIVATE(TID,NCHECK,I,J,K,FV)
       !TID=OMP_GET_THREAD_NUM()
@@ -244,10 +246,10 @@
       RETURN
       END
       !-----------------------------------------------------------------
-      SUBROUTINE SET_BC_LR(BCL,BCR,NX,NWRKX,NG,I,IC,IL)
+      SUBROUTINE SET_BC_LR(BCL,BCR,NX,NXMX,NGMX,I,IC,IL)
       IMPLICIT NONE
       CHARACTER(LEN=2) BCL,BCR
-      INTEGER NX,NWRKX,NG,I,IC,IL(-NG:NG,NWRKX)
+      INTEGER NX,NXMX,NGMX,I,IC,IL(-NGMX:NGMX,NXMX)
          
       IF(IL(IC,I).GE.1.AND.IL(IC,I).LE.NX) THEN
        RETURN
@@ -276,13 +278,11 @@
       RETURN
       END     
       !-----------------------------------------------------------------
-      SUBROUTINE GET_NEIGH_LR(BC,NX,NWRKX,NGX,NG,IL) 
+      SUBROUTINE GET_NEIGH_LR(BC,NX,NXMX,NG,NGMX,IL) 
       IMPLICIT NONE
       CHARACTER(LEN=2) BC(2)
-      INTEGER NX,NWRKX,NG,NGX,I,IC,IL(-NG:NG,NWRKX)
+      INTEGER NX,NXMX,NG,NGMX,I,IC,IL(-NGMX:NGMX,NXMX)
       
-      IL(-NG:NG,1:NWRKX)=0
-
       IF(NX.EQ.1) THEN
        IL(-NG:NG,1:NX)=1
        RETURN
@@ -290,9 +290,9 @@
 
       !TODO: OMP 
       DO I=1,NX
-       DO IC=-NGX,NGX
+       DO IC=-NG,NG
         IL(IC,I)=I+IC 
-        CALL SET_BC_LR(BC(1),BC(2),NX,NWRKX,NG,I,IC,IL)
+        CALL SET_BC_LR(BC(1),BC(2),NX,NXMX,NGMX,I,IC,IL)
         !IL(IC,I)=MIN(MAX(IL(IC,I),1),NX)  
        ENDDO
       ENDDO      
@@ -424,23 +424,26 @@
       SUBROUTINE PYDOF_INIT(NX,NY,NZ,BCX,BCY,BCZ)
       IMPLICIT NONE
       INCLUDE 'pydof_common.h'
-      INTEGER NX,NY,NZ,NDIM,PYDOF_GET_DIM
+      INTEGER NX,NY,NZ,NDIM,PYDOF_GET_DIM,NXDUM
       CHARACTER(LEN=2) BCX(2),BCY(2),BCZ(2)
-
+     
       WRITE(*,*) 
       WRITE(*,'(A)') '*********************PYDOF*********************'
       WRITE(*,*) 
       CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
       CALL PYDOF_CHECK_WRK_SIZE(NX,NY,NZ)
-      NDIM=PYDOF_GET_DIM(NX,NY,NZ)
-      WRITE(*,'(A)') 'DIMENSIONS CHECK: OK.' 
-      WRITE(*,'(AXI1)') 'DIMENSION=',NDIM
       CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
-      WRITE(*,'(A)') 'BCS CHECK: OK.' 
+      NDIM=PYDOF_GET_DIM(NX,NY,NZ)
+      WRITE(*,'(AXI1)') 'DIMENSION=',NDIM
+      
+      !KEEP
       CALL PYDOF_SET_NCM1OR1(NDIM)
+      CALL PYDOF_SET_COEFS_A(NDIM)
+      
+      !GO
       CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
       WRITE(*,'(A)') 'BCS INDICES SET.' 
-      CALL PYDOF_SET_COEFS_A(NDIM)
+    
       WRITE(*,'(AXI1)') 'NO OF DISCRETE FILTERS=',NF
       WRITE(*,'(3(AXI5X))') 'MAX ARRAY SIZE',NXMX,'x',NYMX,'x',NZMX
       WRITE(*,*)
@@ -451,3 +454,4 @@
  
       END
       !-----------------------------------------------------------------
+

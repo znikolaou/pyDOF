@@ -1,10 +1,10 @@
-      PROGRAM TEST_PYDOF_INIT
+      PROGRAM TEST_FILTER_1D
       IMPLICIT NONE
       INCLUDE "pydof_common.h"
       INTEGER I,N
       DOUBLE PRECISION PI,LX
       PARAMETER(N=400,PI=4.0*ATAN(1.0),LX=1.0) 
-      DOUBLE PRECISION Y(N),X(N),FY(N),FYA(N),DX,DELTA,LAMDA,K
+      DOUBLE PRECISION Y(N),X(N),FY(N),FYA(N),RY(N),DX,DELTA,LAMDA,K
       CHARACTER(LEN=2) BCX(2),BCY(2),BCZ(2)
       DOUBLE PRECISION A(3,4,1)
 
@@ -27,10 +27,12 @@
 
       CALL PYDOF_INIT(N,1,1,BCX,BCY,BCZ)
       CALL PYDOF_FILTER(1,N,1,1,Y,FY)
+      CALL PYDOF_FILTER(2,N,1,1,FY,RY)
+     
       OPEN(UNIT=1,FILE='data.txt',STATUS='NEW',FORM='FORMATTED')
-      WRITE(1,*) 'x,','y,','fy,','fya'
+      WRITE(1,*) 'x,','y,','fy,','fya,','ry'
       DO I=1,N
-       WRITE(1,*) X(I),',',Y(I),',',FY(I),',',FYA(I)
+       WRITE(1,*) X(I),',',Y(I),',',FY(I),',',FYA(I),',',RY(I)
       ENDDO
       CLOSE(1)
 
