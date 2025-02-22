@@ -77,21 +77,16 @@
       !-----------------------------------------------------------------
       SUBROUTINE PYDOF_FILTER(IFLT,NX,NY,NZ,VAR,FVAR)
       IMPLICIT NONE
-      !INCLUDE 'omp_lib.h'
       INCLUDE 'pydof_common.h'
+      INCLUDE 'omp_lib.h'
       INTEGER IFLT,NX,NY,NZ,I,J,K,TID,NCHECK
       DOUBLE PRECISION VAR(NX,NY,NZ),FVAR(NX,NY,NZ)
-      !
-      !TODO: IMPLEMENT OMP! 
-      !
-      !CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
-    
-       !$OMP PARALLEL DEFAULT(SHARED) 
-       !$OMP& PRIVATE(TID,NCHECK,I,J,K,FV)
-      !TID=OMP_GET_THREAD_NUM()
-      !NCHECK=OMP_GET_NUM_THREADS()
-      !WRITE(*,'(2(A,X,I3,X))') 'THREAD',TID,'NUM_THREADS=',NCHECK
-      !$OMP DO SCHEDULE(STATIC),COLLAPSE(3)
+
+!$OMP PARALLEL DEFAULT(SHARED),PRIVATE(TID,NCHECK,I,J,K)
+      TID=OMP_GET_THREAD_NUM()
+      NCHECK=OMP_GET_NUM_THREADS()
+      WRITE(*,'(2(AXI4X))') 'THREAD',TID,'NUM_THREADS=',NCHECK
+!$OMP DO SCHEDULE(STATIC),COLLAPSE(3)
       DO K=1,NZ
        DO J=1,NY
         DO I=1,NX                 
@@ -99,8 +94,8 @@
         ENDDO
        ENDDO
       ENDDO
-      !$OMP ENDDO
-      !$OMP END PARALLEL
+!$OMP ENDDO
+!$OMP END PARALLEL
       
       RETURN
       END
@@ -421,10 +416,26 @@
       RETURN
       END
       !-----------------------------------------------------------------
-      SUBROUTINE PYDOF_INIT(NX,NY,NZ,BCX,BCY,BCZ)
+      SUBROUTINE PYDOF_SET_OMP_PARAMS(NTHREADS)
+      IMPLICIT NONE
+      INCLUDE 'omp_lib.h'
+      INTEGER NTHREADS,NMX
+
+      NMX=OMP_GET_MAX_THREADS()
+      IF(NTHREADS.GT.NMX) THEN
+       WRITE(*,*) 'PYDOF_SET_OMP_PARAMS: WARNING'
+       WRITE(*,*) 'NTHREADS > SYSTEM MAX THREADS, MAX THREADS SET'
+      ENDIF
+      CALL OMP_SET_NUM_THREADS(MIN(NMX,NTHREADS))
+
+      RETURN
+      END
+      !-----------------------------------------------------------------
+      SUBROUTINE PYDOF_INIT(NTHREADS,NX,NY,NZ,BCX,BCY,BCZ)
       IMPLICIT NONE
       INCLUDE 'pydof_common.h'
-      INTEGER NX,NY,NZ,NDIM,PYDOF_GET_DIM,NXDUM
+      INCLUDE 'omp_lib.h'
+      INTEGER NTHREADS,NX,NY,NZ,NDIM,PYDOF_GET_DIM,NXDUM
       CHARACTER(LEN=2) BCX(2),BCY(2),BCZ(2)
      
       WRITE(*,*) 
@@ -433,6 +444,8 @@
       CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
       CALL PYDOF_CHECK_WRK_SIZE(NX,NY,NZ)
       CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
+      CALL PYDOF_SET_OMP_PARAMS(NTHREADS)
+   
       NDIM=PYDOF_GET_DIM(NX,NY,NZ)
       WRITE(*,'(AXI1)') 'DIMENSION=',NDIM
       
