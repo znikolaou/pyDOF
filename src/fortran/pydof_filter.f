@@ -28,8 +28,15 @@
       IMPLICIT NONE
       INCLUDE 'pydof_common.h'
       INTEGER NDIM,I,J,K,IFLT,NG
+      DOUBLE PRECISION COEFSL(-NGMX:NGMX,NF)
     
       COEFS_A(:,:,:,:)=0.0D0
+      DO IFLT=1,NF
+       DO I=0,NCOEFM1(IFLT)
+        COEFSL(I,IFLT)=COEFS(I,IFLT)
+        COEFSL(-I,IFLT)=COEFSL(I,IFLT)
+       ENDDO
+      ENDDO
       
       IF(NDIM.EQ.3) THEN
               
@@ -38,7 +45,8 @@
        DO K=-NG,NG
         DO J=-NG,NG
          DO I=-NG,NG
-          COEFS_A(I,J,K,IFLT)=COEFS(I,IFLT)*COEFS(J,IFLT)*COEFS(K,IFLT)
+          COEFS_A(I,J,K,IFLT)=COEFSL(I,IFLT)*COEFSL(J,IFLT)*
+     &                        COEFSL(K,IFLT)
          ENDDO
         ENDDO
        ENDDO
@@ -49,9 +57,9 @@
       DO IFLT=1,NF 
        NG=NCOEFM1(IFLT)
        DO K=0,0
-        DO J=-NG,NG
-         DO I=-NG,NG
-          COEFS_A(I,J,K,IFLT)=COEFS(I,IFLT)*COEFS(J,IFLT)
+        DO J=0,NG
+         DO I=0,NG
+          COEFS_A(I,J,K,IFLT)=COEFSL(I,IFLT)*COEFSL(J,IFLT)
          ENDDO
         ENDDO
        ENDDO
@@ -63,8 +71,8 @@
        NG=NCOEFM1(IFLT)
        DO K=0,0
         DO J=0,0
-         DO I=-NG,NG
-          COEFS_A(I,J,K,IFLT)=COEFS(I,IFLT)
+         DO I=0,NG
+          COEFS_A(I,J,K,IFLT)=COEFSL(I,IFLT)
          ENDDO
         ENDDO
        ENDDO
@@ -434,8 +442,7 @@
       SUBROUTINE PYDOF_INIT(NTHREADS,NX,NY,NZ,BCX,BCY,BCZ)
       IMPLICIT NONE
       INCLUDE 'pydof_common.h'
-      INCLUDE 'omp_lib.h'
-      INTEGER NTHREADS,NX,NY,NZ,NDIM,PYDOF_GET_DIM,NXDUM
+      INTEGER NTHREADS,NX,NY,NZ,NDIM,PYDOF_GET_DIM
       CHARACTER(LEN=2) BCX(2),BCY(2),BCZ(2)
      
       WRITE(*,*) 
@@ -445,18 +452,17 @@
       CALL PYDOF_CHECK_WRK_SIZE(NX,NY,NZ)
       CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
       CALL PYDOF_SET_OMP_PARAMS(NTHREADS)
-   
       NDIM=PYDOF_GET_DIM(NX,NY,NZ)
-      WRITE(*,'(AXI1)') 'DIMENSION=',NDIM
-      
-      !KEEP
+
+      WRITE(*,'(AXI3)') 'DIMENSION=',NDIM
+      WRITE(*,'(AXI3)') 'NO THREADS=,',NTHREADS
+     
       CALL PYDOF_SET_NCM1OR1(NDIM)
+      !TODO
+      !CALL PYDOF_CHECK_SUM()
       CALL PYDOF_SET_COEFS_A(NDIM)
-      
-      !GO
       CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
-      WRITE(*,'(A)') 'BCS INDICES SET.' 
-    
+     
       WRITE(*,'(AXI1)') 'NO OF DISCRETE FILTERS=',NF
       WRITE(*,'(3(AXI5X))') 'MAX ARRAY SIZE',NXMX,'x',NYMX,'x',NZMX
       WRITE(*,*)
