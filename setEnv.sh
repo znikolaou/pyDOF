@@ -1,28 +1,24 @@
 #!/bin/bash
-PYDOF=$PWD
-PYDOF_SRC=$PYDOF/src
-PYDOF_FORTRAN_SRC=$PYDOF_SRC/fortran/
-PYDOF_TUTORIALS=$PYDOF/tutorials/
-#
-PYDOF_FCOMPILER=gfortran 
-PYDOF_FOPTIONS='-fopenmp -O3 -mcmodel=large -fcheck=all'
+PYDOF_HOME=$PWD
+PYDOF_SRC=$PYDOF_HOME/src
+PYDOF_TUTORIALS=$PYDOF_HOME/tutorials/
+PYDOF_FSRC=$PYDOF_SRC/fortran/
+FCOMP='gfortran -fopenmp -O3 -mcmodel=large -fcheck=all'
 
-echo 'PYDOF:'
+echo 'PYDOF home dir:'
 echo $PYDOF
 echo 'PYDOF source:'
 echo $PYDOF_SRC
 echo 'PYDOF Fortran source:'
-echo $PYDOF_FORTRAN_SRC
+echo $PYDOF_FSRC
 echo 'PYDOF tutorials:'
 echo $PYDOF_TUTORIALS
 echo 'Fortran compiler'
-echo $PYDOF_FCOMPILER
-echo 'Fortran options:'
-echo $PYDOF_FOPTIONS
+echo $FCOMP
 
 export PYDOF
+export PYDOF_HOME
 export PYDOF_SRC
-export PYDOF_FORTRAN_SRC
+export PYDOF_FSRC
 export PYDOF_TUTORIALS
-export PYDOF_FCOMPILER
-export PYDOP_FOPTIONS
+export FCOMP
