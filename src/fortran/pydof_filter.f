@@ -28,25 +28,20 @@
       IMPLICIT NONE
       INCLUDE 'pydof_common.h'
       INTEGER NDIM,I,J,K,IFLT,NG
-      DOUBLE PRECISION COEFSL(-NGMX:NGMX,NF)
+      !DOUBLE PRECISION COEFSL(-NGMX:NGMX,NF)
     
       COEFS_A(:,:,:,:)=0.0D0
-      DO IFLT=1,NF
-       DO I=0,NCOEFM1(IFLT)
-        COEFSL(I,IFLT)=COEFS(I,IFLT)
-        COEFSL(-I,IFLT)=COEFSL(I,IFLT)
-       ENDDO
-      ENDDO
-      
+           
       IF(NDIM.EQ.3) THEN
-              
+
+      WRITE(*,'(A)') 'PYDOF_SET_COEFS_A: 3D'       
       DO IFLT=1,NF 
       NG=NCOEFM1(IFLT)
-       DO K=-NG,NG
-        DO J=-NG,NG
-         DO I=-NG,NG
-          COEFS_A(I,J,K,IFLT)=COEFSL(I,IFLT)*COEFSL(J,IFLT)*
-     &                        COEFSL(K,IFLT)
+       DO K=0,NG
+        DO J=0,NG
+         DO I=0,NG
+          COEFS_A(I,J,K,IFLT)=COEFS(I,IFLT)*COEFS(J,IFLT)*
+     &                        COEFS(K,IFLT)
          ENDDO
         ENDDO
        ENDDO
@@ -54,27 +49,23 @@
     
       ELSEIF(NDIM.EQ.2) THEN
 
+      WRITE(*,'(A)') 'PYDOF_SET_COEFS_A: 2D'
       DO IFLT=1,NF 
        NG=NCOEFM1(IFLT)
-       DO K=0,0
-        DO J=0,NG
-         DO I=0,NG
-          COEFS_A(I,J,K,IFLT)=COEFSL(I,IFLT)*COEFSL(J,IFLT)
-         ENDDO
+       DO J=0,NG
+        DO I=0,NG
+         COEFS_A(I,J,0,IFLT)=COEFS(I,IFLT)*COEFS(J,IFLT)
         ENDDO
        ENDDO
       ENDDO
     
       ELSEIF(NDIM.EQ.1) THEN
 
+      WRITE(*,'(A)') 'PYDOF_SET_COEFS_A: 1D'
       DO IFLT=1,NF 
        NG=NCOEFM1(IFLT)
-       DO K=0,0
-        DO J=0,0
-         DO I=0,NG
-          COEFS_A(I,J,K,IFLT)=COEFSL(I,IFLT)
-         ENDDO
-        ENDDO
+       DO I=0,NG
+        COEFS_A(I,0,0,IFLT)=COEFS(I,IFLT)
        ENDDO
       ENDDO
 
@@ -91,9 +82,9 @@
       DOUBLE PRECISION VAR(NX,NY,NZ),FVAR(NX,NY,NZ)
 
 !$OMP PARALLEL DEFAULT(SHARED),PRIVATE(TID,NCHECK,I,J,K)
-      TID=OMP_GET_THREAD_NUM()
-      NCHECK=OMP_GET_NUM_THREADS()
-      WRITE(*,'(2(AXI4X))') 'THREAD',TID,'NUM_THREADS=',NCHECK
+      !TID=OMP_GET_THREAD_NUM()
+      !NCHECK=OMP_GET_NUM_THREADS()
+      !WRITE(*,'(2(AXI4X))') 'THREAD',TID,'NUM_THREADS=',NCHECK
 !$OMP DO SCHEDULE(STATIC),COLLAPSE(3)
       DO K=1,NZ
        DO J=1,NY
@@ -455,7 +446,7 @@
       NDIM=PYDOF_GET_DIM(NX,NY,NZ)
 
       WRITE(*,'(AXI3)') 'DIMENSION=',NDIM
-      WRITE(*,'(AXI3)') 'NO THREADS=,',NTHREADS
+      WRITE(*,'(AXI3)') 'NO THREADS=',NTHREADS
      
       CALL PYDOF_SET_NCM1OR1(NDIM)
       !TODO
