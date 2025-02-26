@@ -101,6 +101,8 @@
       !----------------------------------------------------------------
       SUBROUTINE FILTP(IFLT,I,J,K,NX,NY,NZ,V,FV)
       !
+      ! TODO: REFORMAT THIS
+      ! -------------------
       ! AUTHOR: Z. NIKOLAOU (2023)
       ! FILTERS ON GIVEN POINT I,J,K USING A SYMMETRIC
       ! FILTER IN X,Y,Z. EXPLOITS FILTER SYMMETRY TO SPEED UP
@@ -313,6 +315,31 @@
       RETURN
       END
       !-----------------------------------------------------------------
+      SUBROUTINE PYDOF_CHECK_FILTER_CONSISTENCY()
+      IMPLICIT NONE
+      INCLUDE 'pydof_common.h'
+      INTEGER I,J
+      DOUBLE PRECISION S,ONE,E
+      PARAMETER(ONE=1.0E0,E=1.0E-3)
+
+      WRITE(*,'(A)') 'CHECKING FILTER CONSISTENY:'
+      DO I=1,NF
+       S=COEFS(0,I)
+       DO J=1,NCOEFM1(I) 
+        S=S+COEFS(J,I)*2.0E0
+       ENDDO
+       IF(ABS(S-ONE).GT.E) THEN
+        WRITE(*,'(AI4)') 'PYDOF_CHECK_SUM: ERROR FOR FILTER WITH ID:',I
+        WRITE(*,'(A)') 'ABS(S-ONE).GT.E, S'
+        STOP
+       ELSE 
+        WRITE(*,'(AXI3XAF12.5XA)') 'FILTER',I,'CHECK SUM',S,'OK!'
+       ENDIF
+      ENDDO
+
+      RETURN
+      END
+      !-----------------------------------------------------------------
       SUBROUTINE CHECK_WRK_SIZE(N,NMAX,CN,CNMAX)
       IMPLICIT NONE
       INTEGER N,NMAX
@@ -426,6 +453,7 @@
        WRITE(*,*) 'NTHREADS > SYSTEM MAX THREADS, MAX THREADS SET'
       ENDIF
       CALL OMP_SET_NUM_THREADS(MIN(NMX,NTHREADS))
+      WRITE(*,'(AXI4)') 'NO OF THREADS:',NTHREADS
 
       RETURN
       END
@@ -439,21 +467,19 @@
       WRITE(*,*) 
       WRITE(*,'(A)') '*********************PYDOF*********************'
       WRITE(*,*) 
-      CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
-      CALL PYDOF_CHECK_WRK_SIZE(NX,NY,NZ)
-      CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
       CALL PYDOF_SET_OMP_PARAMS(NTHREADS)
+      CALL PYDOF_CHECK_FILTER_CONSISTENCY() 
+      
+      !MOVE ALL CALLS BELOW TO PYDOF_FILTER?
+      CALL PYDOF_CHECK_DIMS(NX,NY,NZ)
+      CALL PYDOF_CHECK_WRK_SIZE(NX,NY,NZ) 
       NDIM=PYDOF_GET_DIM(NX,NY,NZ)
-
-      WRITE(*,'(AXI3)') 'DIMENSION=',NDIM
-      WRITE(*,'(AXI3)') 'NO THREADS=',NTHREADS
-     
       CALL PYDOF_SET_NCM1OR1(NDIM)
-      !TODO
-      !CALL PYDOF_CHECK_SUM()
       CALL PYDOF_SET_COEFS_A(NDIM)
+      CALL PYDOF_CHECK_BCS(BCX,BCY,BCZ)
       CALL PYDOF_SET_BCS(NX,NY,NZ,BCX,BCY,BCZ)
-     
+
+      WRITE(*,'(AXI3)') 'ARRAY DIMENSION=',NDIM
       WRITE(*,'(AXI1)') 'NO OF DISCRETE FILTERS=',NF
       WRITE(*,'(3(AXI5X))') 'MAX ARRAY SIZE',NXMX,'x',NYMX,'x',NZMX
       WRITE(*,*)
