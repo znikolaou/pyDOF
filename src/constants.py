@@ -29,5 +29,6 @@ class Const:
     HEADER_OUT=LINE+"\n! "+LOGO+"\n! Author: Z. Nikolaou"+"\n"+LINE
     #
     FORTRAN_HEADER='pydof_common.h'
+    F90MODULE='pydofFilterDataModule.f90'
 #-----------------------------------------------------------------------
 

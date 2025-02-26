@@ -16,7 +16,7 @@ class FortranGenerator(Const):
 
     # TODO: CLEAN-UP 
 
-    def __init__(self, path, discreteFiltersList, \
+    def __init__(self, path, code, discreteFiltersList, \
             maxArraySizeList=[10000, 10000, 10000]):
         self._path=path
         self._filtersList=discreteFiltersList
@@ -25,17 +25,92 @@ class FortranGenerator(Const):
         self._ncList=self.__getNcList()
         self._ncm1List=[i-1 for i in self._ncList]
         self._isForwardList=self.__getIsForwardList()
-        self.__fl=open(path+'/'+self.FORTRAN_HEADER,'w')
+        if code=='f77':
+            self.__fl=open(path+'/'+self.FORTRAN_HEADER,'w')
+        elif code=='f90':
+            self.__fl=open(path+'/'+self.F90MODULE,'w')
         self._INT='INTEGER'
         self._DBL='DOUBLE PRECISION'
         self._DATA='DATA'
         self._PRM='PARAMETER'
+        self._DBLCOLON=' ::'
+        self._PRIVATE=',PRIVATE'
 
     def __getNcList(self):
         return [len(ob.coeffs) for ob in self._filtersList]
 
     def __getIsForwardList(self):
         return [1 if ob.isForward() else 0 for ob in self._filtersList]
+
+    def generateF90Module(self):
+        NCOEF='PF_NCOEF'
+        NCOEFM1='PF_NCOEFM1'
+        NCMX='PF_NCMX'
+        NGMX='PF_NGMX'
+        NF='PF_NF'
+        COEFS='PF_COEFS'
+        NXMX='PF_NXMX'
+        NYMX='PF_NYMX'
+        NZMX='PF_NZMX'
+        NCM1OR1='PF_NCM1OR1'
+        nxmx=self._maxArraySizeList[0]
+        nymx=self._maxArraySizeList[1]
+        nzmx=self._maxArraySizeList[2]
+        
+        ncMax=max(self._ncList)
+        ncMaxM1=ncMax-1
+
+        self.__writeLine('MODULE PYDOF_FILTER_DATA')
+        self.__writeLine('IMPLICIT NONE')
+
+        self.__writeComment('----------------------------------')
+        self.__writeComment('This code has been auto-generated:')
+        self.__writeComment(self.__buildDate())
+        self.__writeComment('')
+        self.__writeComment(self.LOGO)
+        self.__writeComment('Author: Z. Nikolaou')
+        self.__writeComment('----------------------------------')
+
+        self.__writeIntegersF90([NF, NCMX, NGMX])
+        self.__writeParam(NF, str(self._nFilters))
+        self.__writeParam(NCMX, str(ncMax))
+        self.__writeParam(NGMX, str(ncMaxM1))
+        self.__writeIntegerArrayF90(NCOEF, NF)
+        self.__writeIntegerArrayF90(NCOEFM1, NF)
+        self.__writeIntegerArrayF90('ISFORWARD', NF)
+        #todo:create double array method
+        self.__writeLine('DOUBLE PRECISION, PRIVATE :: '+COEFS+'(0:'+NGMX+','+ \
+                NF+')')
+
+        self.__writeDataF90(NCOEF,self._ncList)
+        self.__writeDataF90(NCOEFM1,self._ncm1List)
+        self.__writeDataF90('ISFORWARD',self._isForwardList)
+
+        #todo: reformat/clean
+        #Filter coefs
+        nFilters=len(self._filtersList)
+        coeffsArray=np.zeros(ncMax)
+        for j in range(nFilters):
+            ob=self._filtersList[j]
+            nc=self._ncList[j]
+            coeffsArray[:]=0.0e0
+            coeffsArray[0:nc]=ob.coeffs[0:nc]
+            self.__writeDataF90(COEFS+'(:,'+str(j+1)+')', coeffsArray, \
+                    self.NUM_FORMAT)
+    
+        self.__writeIntegersF90([NXMX,NYMX,NZMX])
+        self.__writeParam(NXMX, str(nxmx))
+        self.__writeParam(NYMX, str(nymx))
+        self.__writeParam(NZMX, str(nzmx))
+        self.__writeLine('INTEGER,PRIVATE :: '+NCM1OR1+'('+str(3)+','+NF+')')
+        self.__writeLine('INTEGER,PRIVATE :: '+'IL(-'+NGMX+':'+NGMX+','+NXMX+','+NF+')')
+        self.__writeLine('INTEGER,PRIVATE :: '+'JL(-'+NGMX+':'+NGMX+','+NYMX+','+NF+')')
+        self.__writeLine('INTEGER,PRIVATE :: '+'KL(-'+NGMX+':'+NGMX+','+NZMX+','+NF+')')       
+        self.__writeLine('DOUBLE PRECISION,PRIVATE :: '+'COEFS_A(-'+NGMX+':'+NGMX+','+ \
+                                                     '-'+NGMX+':'+NGMX+','+ \
+                                                     '-'+NGMX+':'+NGMX+',NF'+')')
+        self.__writeLine('END MODULE')
+        self.__fl.close()
 
     def generateHeader(self):
         NCOEF='NCOEF'
@@ -119,6 +194,13 @@ class FortranGenerator(Const):
             self.__writeContinuationLine(self.__getFormattedString(varList[i], fmt)+',')
         self.__writeContinuationLine(self.__getFormattedString(varList[nm1], fmt)+'/')
 
+    def __writeDataF90(self, string, varList, fmt=None):
+        self.__writeLine(self._DATA+' '+string+'/')
+        nm1=len(varList)-1
+        for i in range(nm1):
+            self.__writeContinuationLineF90(self.__getFormattedString(varList[i], fmt)+',')
+        self.__writeLine(self.__getFormattedString(varList[nm1], fmt)+'/')
+
     def __getFormattedString(self, value, fmt=None):
         return str(value) if fmt is None else str(fmt(value))
         
@@ -131,19 +213,38 @@ class FortranGenerator(Const):
     def __getContinuationLine(self, line):
         return '     & '+line+'\n'
 
+    def __getContinuationLineF90(self, line):
+        return '      '+line+' &'+'\n'
+
     def __writeIntegers(self, namesList):
         self.__writeLine(self._INT+ \
+                self.__buildCommaSeparated(namesList))
+
+    def __writeIntegersF90(self, namesList):
+        self.__writeLine(self._INT+self._PRIVATE+self._DBLCOLON+\
                 self.__buildCommaSeparated(namesList))
 
     def __writeDoubles(self, namesList):
         self.__writeLine(self._DBL+ \
                 self.__buildCommaSeparated(namesList))
     
+    def __writeDoublesF90(self, namesList):
+        self.__writeLine(self._DBL+self._PRIVATE+self._DBLCOLON+ \
+                self.__buildCommaSeparated(namesList))
+    
     def __writeIntegerArray(self, name, size):
         self.__writeLine(self._INT+self.__wrapInPars(name, size))
 
+    def __writeIntegerArrayF90(self, name, size):
+        self.__writeLine(self._INT+self._PRIVATE+self._DBLCOLON+ \
+                self.__wrapInPars(name, size))
+
     def __writeDoubleArray(self, name, size):
         self.__writeLine(self._DBL+self.__wrapInPars(name, size))
+
+    def __writeDoubleArrayF90(self, name, size):
+        self.__writeLine(self._DBL+self._PRIVATE+self._DBLCOLON+\
+                self.__wrapInPars(name, size))
 
     def __writeParam(self, name, size):
         return self.__writeLine(self._PRM+' ('+name+'='+size+')')
@@ -166,6 +267,9 @@ class FortranGenerator(Const):
 
     def __writeContinuationLine(self, line):
         self.__fl.write(self.__getContinuationLine(line))
+
+    def __writeContinuationLineF90(self, line):
+        self.__fl.write(self.__getContinuationLineF90(line))
 
 
 
