@@ -28,11 +28,11 @@ class ReconstructedTransferFunction:
         self.name="Inverse filter at N van Cittert="+str(nVanCittert)
 
     def name(self):
-        return "Inverse filter at N van Cittert=" \
-                +str(self._nV)
+        return "Inverse filter at N van Cittert="+str(self._nV)
 
-    def getTransferFunction(self):
-        return self._recTfunc
+    def getTransferFunction(self): return self._recTfunc
+
+    def getOriginalTransferFunction(self): return self._forTfunc 
 
     def getVQTransferFunction(self, vCoeffs):
         #returns Vd*Qd
@@ -40,6 +40,5 @@ class ReconstructedTransferFunction:
                 self._dfilter.getTransferFunction(vCoeffs)
         return vgTfunc
 
-    def getNvanCittert(self):
-        return self._nV
+    def getNvanCittert(self): return self._nV
 #-----------------------------------------------------------------------

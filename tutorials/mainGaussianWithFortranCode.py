@@ -12,29 +12,28 @@ wavenumber=Wavenumber()
 
 #define Gaussian filter having Delta/h 4
 flt=Gaussian(wavenumber, 8.0)
-nsNominal=flt.getNominalStencil()
 
 #define discrete filter
-dflt=DiscreteFilter(wavenumber, nStencil=11)
+dflt=DiscreteFilter(wavenumber)
 
 #run optimiser for forward filter
-opt=Optimiser(flt, dflt, isZeroDampingAtPi=True, isAdaptive=True)
+opt=Optimiser(flt, dflt)
 opt.run()
 coeffs=dflt.coeffs
-print(coeffs)
+nsForward=dflt.getNs()
 
 #define target for inverse discrete filter
-tdflt=ReconstructedTransferFunction(dflt, nVanCittert=70)
+tdflt=ReconstructedTransferFunction(dflt, nVanCittert=200)
 
 #define inverse discrete filter
-vdflt=DiscreteFilter(wavenumber, nStencil=2*nsNominal+1, isForward=False)
+vdflt=DiscreteFilter(wavenumber, nStencil=nsForward, isForward=False)
 
 #run optimiser for inverse filter
-iopt=Optimiser(tdflt, vdflt, isZeroDampingAtPi=True, isAdaptive=True)
+iopt=Optimiser(tdflt, vdflt, isAdaptive=True)
 iopt.run()
 
 VGTfunc=iopt.getSolution()
-print(vdflt.coeffs)
+#print(vdflt.coeffs)
 
 #Output
 #out=Output("./fortran/", "coeffs", flt, dflt, tdflt, vdflt)
@@ -42,7 +41,7 @@ print(vdflt.coeffs)
 
 #Fortran code
 fortranOutDir='../tests/fortran/'
-fCode=FortranGenerator(fortranOutDir, [dflt, vdflt])
+fCode=FortranGenerator(fortranOutDir, 'f77', [dflt, vdflt])
 fCode.generateHeader()
 
 

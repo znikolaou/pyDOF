@@ -34,7 +34,6 @@
        DO I=1,NX
         R=SQRT(X(I)**2.0+Y(J)**2.0)
         A(I,J)=SIN(KX*X(I))
-        !Y(I)*EXP(-DELTA**2.0*K**2.0/24.0)
        ENDDO
       ENDDO
 
