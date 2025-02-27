@@ -85,8 +85,10 @@ class DiscreteFilter(Log, Const):
             hg[i]=hg[i]+halfCoeffs[0]
             for j in range(1, nh):
                 hg[i]=hg[i]+Const.TWO*halfCoeffs[j]*np.cos(j*self._k[i])
-        if(nVanCittert==0): return hg
-        else: return self.__getReconstructedTransferFunction(hg, \
+        if(nVanCittert==0): 
+            return hg
+        else: 
+            return self.__getReconstructedTransferFunction(hg, \
                 nVanCittert)
 
     def __getReconstructedTransferFunction(self, tFunc, nVanCittert):
