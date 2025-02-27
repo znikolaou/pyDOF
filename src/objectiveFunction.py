@@ -19,7 +19,7 @@ class ObjectiveFunction(Errors):
         self._target=target
         self._dfilter=discreteFilter
         self._targetTfunc=self._target.getTransferFunction() 
-        self._counter=1
+        self._counter=0
         self._lastError=None
         self._lastSolution=None
         
