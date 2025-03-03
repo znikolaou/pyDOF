@@ -32,6 +32,8 @@ class ObjectiveFunction(Errors):
             self._lastSolution= \
                     self._dfilter.getTransferFunction(coeffs)
         self._lastError=self.msqe(self._targetTfunc, self._lastSolution)
+        #TODO: implement gradient regulariser?
+        #self._gradError=self.msqe(np.gradient(self._targetTfunc), np.gradient(self._lastSolution))
         return self._lastError
 
     def getLastSolution(self): return self._lastSolution

@@ -7,29 +7,35 @@ from optimiser import *
 from output import * 
 from fortranGenerator import *
 
+
+optMethod='SLSQP'
 #define waveno object
 wavenumber=Wavenumber()
 
 #define Gaussian filter having Delta/h 4
-flt=Gaussian(wavenumber, 8.0)
+flt=Gaussian(wavenumber, 16.0)
 
 #define discrete filter
 dflt=DiscreteFilter(wavenumber)
 
 #run optimiser for forward filter
-opt=Optimiser(flt, dflt)
+opt=Optimiser(flt, dflt, method=optMethod)
 opt.run()
 coeffs=dflt.coeffs
 nsForward=dflt.getNs()
 
 #define target for inverse discrete filter
-tdflt=ReconstructedTransferFunction(dflt, nVanCittert=200)
+#target defined using discrete filter
+#tdflt=ReconstructedTransferFunction(dflt, nVanCittert=200)
+#target defined using continuous filter
+tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=100)
+
 
 #define inverse discrete filter
 vdflt=DiscreteFilter(wavenumber, nStencil=nsForward, isForward=False)
 
 #run optimiser for inverse filter
-iopt=Optimiser(tdflt, vdflt, isAdaptive=True)
+iopt=Optimiser(tdflt, vdflt, isAdaptive=True, method=optMethod)
 iopt.run()
 
 VGTfunc=iopt.getSolution()

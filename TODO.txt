@@ -1,0 +1,6 @@
+1. Add functionality to define filter using cut-off wavenumber. 
+2. Check effect of using different optimisers. 
+3. Examine effect of solving first un-constrained and then constrained problem.
+4. Finish f90 module creaction implementation.
+5. Modify pydof_common.h to avoid potential name conflicts.
+

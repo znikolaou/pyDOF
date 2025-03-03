@@ -12,10 +12,10 @@ class Const:
     ONE=1.0e0
     TWO=2.0e0
     PI=np.pi
-    N=700
+    N=200
     TOL_NYQDAMP=0.1
     TOL_OPTIMISER=1.0e-6
-    MAX_ITERATIONS=1500
+    MAX_ITERATIONS=500
     #
     NUM_FORMAT_SHORT="{:.8e}.".format
     NUM_FORMAT="{:.16e}".format

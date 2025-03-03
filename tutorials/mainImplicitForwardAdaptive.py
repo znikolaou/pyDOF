@@ -9,7 +9,7 @@ from optimiser import *
 wavenumber=Wavenumber(600)
 
 #define Implicit filter having a=0.0
-flt=Implicit(wavenumber, -0.4)
+flt=Implicit(wavenumber, -0.49)
 
 #define discrete filter
 dflt=DiscreteFilter(wavenumber)

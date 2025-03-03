@@ -25,8 +25,12 @@ class Filter(Log, Const):
             self.printWarning("_checkNyqDamping",  \
                     "insufficient Nyquist damping "+str(damping))
 
-    def getTransferFunction(self):
-        return self._tFunc
+    def getTransferFunction(self, nv=0):
+        nk=len(self._k)
+        tf=np.zeros(nk)
+        for i in range(nk):
+            tf[i]=Const.ONE-(Const.ONE-self._tFunc[i])**(nv+1)
+        return tf
       
     def getNyquistDamping(self): 
         return self._tFunc[len(self._k)-1]
