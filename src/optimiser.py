@@ -69,7 +69,7 @@ class Optimiser(Const, Log):
 
     def run(self): 
         isConverged=False
-        maxIter=0
+        maxIter=1
         itr=0
         nmp1=self._dfilter.getNmPlusOne()
         errorOld=None
@@ -78,20 +78,16 @@ class Optimiser(Const, Log):
         for i in range(maxIter):
             itr+=1
             xo=self.__getInitialGuess(nmp1)
-            #self._solution=self.__getUnConstrainedSolution(xo)
-            self._solution=self.__getConstrainedSolution(xo, self.__getConstraintsList(nmp1))
+            solUnc=self.__getUnConstrainedSolution(xo)
+            self._solution=self.__getConstrainedSolution(solUnc.x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
             self.__printIterInfo(itr, nmp1, self._error)
-            if self._error<=Const.TOL_OPTIMISER:
+            if self.__isConverged(self._error): 
                 isConverged=True
                 break
-            if itr>1:
-                if self._error>1.05*errorOld:
-                    print('*Increasing error detected, error=', self._error, 'errorOld=', errorOld)
-                    print('*Reverting to last solution ...')
-                    self._solution=solOld
-                    self._error=errorOld
-                    break
+            if self.__isDiverging(itr, self._error, errorOld, solOld): 
+                isConverged=False
+                break
             nmp1+=1
             errorOld=self._error
             solOld=self._solution
@@ -102,7 +98,26 @@ class Optimiser(Const, Log):
         #
         self._dfilter.setCoeffs(self.get())
         self._dfilter.setOptError(self._error)
-                               
+               
+    def __isConverged(self, error):
+        if error<=Const.TOL_OPTIMISER: 
+            return True
+        else:
+            return False
+    
+    def __isDiverging(self, itr, error, errorOld, solOld):
+        if itr>1:
+            if error>Const.DIVERGENCE_FACTOR*errorOld:
+                    print('*Increasing error detected, error=', error, 'errorOld=', errorOld)
+                    print('*Reverting to last solution ...')
+                    self._solution=solOld
+                    self._error=errorOld
+                    return True
+            else:
+                return False
+        else:
+            return False
+
     def get(self): return self._solution.x
 
     def getSolution(self): return self._objFunc.getLastSolution()
@@ -159,7 +174,8 @@ class Optimiser(Const, Log):
         constraintsList=[]
         constraintsList.append(self.__getConstraintConsistency(A))
         if(self._isInverse):
-            constraintsList.append(self.__getConstraintBetweenOneAndOneOverHGd(A))
+            #constraintsList.append(self.__getConstraintBetweenOneAndOneOverHGd(A))
+            constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
             return constraintsList
         if(self._isPositive): 
             constraintsList.append(self.__getConstraintZeroToOne(A))

@@ -11,7 +11,7 @@ from fortranGenerator import *
 wavenumber=Wavenumber()
 
 #define Gaussian filter having Delta/h 4
-flt=Implicit(wavenumber, -0.45)
+flt=Implicit(wavenumber, -0.40)
 
 #define discrete filter
 dflt=DiscreteFilter(wavenumber)
@@ -22,7 +22,7 @@ opt.run()
 nsForward=dflt.getNs()
 
 #define target for inverse discrete filter
-tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=100) #70
+tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=40) #70
 
 #define inverse discrete filter
 vdflt=DiscreteFilter(wavenumber, nStencil=nsForward, isForward=False)

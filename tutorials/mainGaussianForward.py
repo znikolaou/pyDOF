@@ -10,13 +10,13 @@ from output import *
 wavenumber=Wavenumber()
 
 #define Gaussian filter having Delta/h 4
-flt=Gaussian(wavenumber, 4.0e0)
+flt=Gaussian(wavenumber, 16.0e0)
 
 #define a 9-point stencil discrete filter
-dflt=DiscreteFilter(wavenumber, nStencil=9)
+dflt=DiscreteFilter(wavenumber)
 
 #run optimiser
-opt=Optimiser(flt, dflt, isZeroDampingAtPi=True, isPositive=True)
+opt=Optimiser(flt, dflt)
 opt.run()
 print("Optimised discrete filter coeffs=", dflt.coeffs)
 plt.plot(wavenumber.get(), flt.getTransferFunction(), 'ko', label="$\hat{G}$")
@@ -26,6 +26,4 @@ plt.xlabel("k")
 plt.legend()
 plt.show()
 
-#write to file
-out=Output("./output/", "coeffs", flt, dflt)
-out.write()
+

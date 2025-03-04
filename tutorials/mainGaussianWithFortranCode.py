@@ -8,12 +8,13 @@ from output import *
 from fortranGenerator import *
 
 
-optMethod='SLSQP'
+#optMethod='SLSQP'
+optMethod='COBYQA'
 #define waveno object
 wavenumber=Wavenumber()
 
 #define Gaussian filter having Delta/h 4
-flt=Gaussian(wavenumber, 16.0)
+flt=Gaussian(wavenumber, 8.0)
 
 #define discrete filter
 dflt=DiscreteFilter(wavenumber)
@@ -28,7 +29,7 @@ nsForward=dflt.getNs()
 #target defined using discrete filter
 #tdflt=ReconstructedTransferFunction(dflt, nVanCittert=200)
 #target defined using continuous filter
-tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=100)
+tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=80)
 
 
 #define inverse discrete filter
