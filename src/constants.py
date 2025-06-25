@@ -25,9 +25,11 @@ class Const:
     MONTH=DATE.month
     YEAR=DATE.year
     #
-    LOGO="PYDOF "+str(YEAR)+'.'+str(MONTH).zfill(2)
-    LINE="!*************************************************************"
-    HEADER_OUT=LINE+"\n! "+LOGO+"\n! Author: Z. Nikolaou"+"\n"+LINE
+    LOGO="! PYDOF "
+    AUTHOR='! Author: Z. Nikolaou '
+    IS_AUTO='! This is an auto-generated file: '+str(DATE)
+    LINE="!-------------------------------------------------------------"
+    HEADER_OUT=LINE+"\n"+LOGO+"\n"+IS_AUTO+"\n"+AUTHOR+"\n"+LINE
     #
     FORTRAN_HEADER='pydof_common.h'
     F90MODULE='pydofFilterDataModule.f90'
