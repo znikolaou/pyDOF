@@ -1,6 +1,9 @@
-# PYthon package for Discrete OPtimised Filters (PYDOF)
-# Author: Z. Nikolaou.
+!-----------------------------------------------------------------------
+! pyDOF is a software library for generating optimised discrete filters.
+! 
+! Author: Z. Nikolaou.
+!----------------------------------------------------------------------- 
 
-#To use: 
-	1. Set environment variables: source setenv.sh
-        2. Follow examples in ./tutorials/
+To use: 
+ 1. Set environment variables: source setenv.sh
+ 2. See ./examples/
