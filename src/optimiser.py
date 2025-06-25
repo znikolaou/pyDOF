@@ -40,6 +40,7 @@ class Optimiser(Const, Log):
         self._nVanCittert=self.__getNvanCittert()
         self._solution=None
         self._error=None
+        self._uncMethod='BFGS'
  
     def __isInverse(self, targetOb):
         if(isinstance(targetOb, ReconstructedTransferFunction)):
@@ -59,7 +60,7 @@ class Optimiser(Const, Log):
         return nv
 
     def __getUnConstrainedSolution(self, xo): 
-        solution=minimize(self._objFunc.get, xo, method='BFGS')
+        solution=minimize(self._objFunc.get, xo, method=self._uncMethod)
         return solution
 
     def __getConstrainedSolution(self, xo, constraintsList):
@@ -70,32 +71,32 @@ class Optimiser(Const, Log):
     def run(self): 
         isConverged=False
         maxIter=1
-        itr=0
+        itr=1
         nmp1=self._dfilter.getNmPlusOne()
         errorOld=None
         solOld=None
         if self._isAdaptive: maxIter=Const.MAX_ITERATIONS
         for i in range(maxIter):
-            itr+=1
-            xo=self.__getInitialGuess(nmp1)
-            solUnc=self.__getUnConstrainedSolution(xo)
+            solUnc=self.__getUnConstrainedSolution(self.__getInitialGuess(nmp1))
             self._solution=self.__getConstrainedSolution(solUnc.x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
             self.__printIterInfo(itr, nmp1, self._error)
             if self.__isConverged(self._error): 
                 isConverged=True
                 break
+            #TODO: implement more sophisticated error controller
             if self.__isDiverging(itr, self._error, errorOld, solOld): 
                 isConverged=False
                 break
             nmp1+=1
+            itr+=1
             errorOld=self._error
             solOld=self._solution
+ 
         if isConverged:
             print('\n*Success: converged at iteration ', itr, 'error=', self._error)
         else:
             print('\n*Failure to converge')
-        #
         self._dfilter.setCoeffs(self.get())
         self._dfilter.setOptError(self._error)
                
@@ -160,13 +161,16 @@ class Optimiser(Const, Log):
     def __getConstraintBetweenOneAndNPlusOne(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk, :], Const.ONE, \
                     self._nVanCittert+1)
-    
+
+    def __getConstraintBetweenOneAndInfinity(self, matrixA):
+        return LinearConstraint(matrixA[1:self._nk, :], Const.ONE, np.inf)
+  
     def __getConstraintBetweenOneAndOneOverHGd(self, matrixA):
         hg=self._target.getOriginalTransferFunction()
         bl=np.ndarray(self._nk)
         br=np.ndarray(self._nk)
         bl[:]=Const.ONE
-        br[:]=Const.ONE/hg[:]
+        br[:]=Const.ONE/hg[:] #TODO: possible divide by zero here
         return LinearConstraint(matrixA[1:, :], bl[1:], br[1:])
 
     def __getConstraintsList(self, nmp1):
@@ -175,7 +179,8 @@ class Optimiser(Const, Log):
         constraintsList.append(self.__getConstraintConsistency(A))
         if(self._isInverse):
             #constraintsList.append(self.__getConstraintBetweenOneAndOneOverHGd(A))
-            constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
+            #constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
+            constraintsList.append(self.__getConstraintBetweenOneAndInfinity(A))
             return constraintsList
         if(self._isPositive): 
             constraintsList.append(self.__getConstraintZeroToOne(A))
