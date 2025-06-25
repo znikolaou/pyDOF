@@ -12,10 +12,10 @@ wavenumber=Wavenumber()
 flt=SharpCutOff(wavenumber, np.pi/2.0)
 
 #define discrete filter
-dflt=DiscreteFilter(wavenumber)
+dflt=DiscreteFilter(wavenumber,nStencil=31)
 
 #run optimiser
-opt=Optimiser(flt, dflt, isZeroDampingAtPi=False, isPositive=True, isAdaptive=True)
+opt=Optimiser(flt, dflt, isZeroDampingAtPi=False, isPositive=True, isAdaptive=False, lamda=2.0)
 opt.run()
 print("Optimised discrete filter coeffs=", dflt.coeffs)
 plt.plot(wavenumber.get(), flt.getTransferFunction(), 'ko', label="$\hat{G}$")

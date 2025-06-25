@@ -26,7 +26,8 @@ class Optimiser(Const, Log):
     Author: Z. Nikolaou.
     """
     def __init__(self, target, discreteFilter, method="SLSQP",  \
-            isZeroDampingAtPi=True, isPositive=True, isAdaptive=True): 
+            isZeroDampingAtPi=True, isPositive=True, isAdaptive=True, \
+            lamda=0.e0): 
         Log.__init__(self, type(self).__name__) 
         self._target=target
         self._dfilter=discreteFilter
@@ -34,7 +35,9 @@ class Optimiser(Const, Log):
         self._isZeroDampingAtPi=isZeroDampingAtPi
         self._isPositive=isPositive
         self._isAdaptive=isAdaptive
-        self._objFunc=ObjectiveFunction(self._target, self._dfilter)
+        self._lamda=lamda
+        self._objFunc=ObjectiveFunction(self._target, self._dfilter, \
+                lamda=self._lamda)
         self._nk=self._dfilter.getNk()
         self._isInverse=self.__isInverse(self._target)
         self._nVanCittert=self.__getNvanCittert()
@@ -180,7 +183,7 @@ class Optimiser(Const, Log):
         if(self._isInverse):
             #constraintsList.append(self.__getConstraintBetweenOneAndOneOverHGd(A))
             #constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
-            constraintsList.append(self.__getConstraintBetweenOneAndInfinity(A))
+            #constraintsList.append(self.__getConstraintBetweenOneAndInfinity(A))
             return constraintsList
         if(self._isPositive): 
             constraintsList.append(self.__getConstraintZeroToOne(A))

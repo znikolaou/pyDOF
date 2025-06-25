@@ -9,8 +9,8 @@ from output import *
 #define waveno object
 wavenumber=Wavenumber()
 
-#define Gaussian filter having Delta/h 4
-flt=Gaussian(wavenumber, 4.0)
+#define Gaussian filter having Delta/h 8
+flt=Gaussian(wavenumber, 8.0)
 nsNominal=flt.getNominalStencil()
 
 #define discrete filter
@@ -21,7 +21,7 @@ opt=Optimiser(flt, dflt)
 opt.run()
 
 #define target for inverse discrete filter
-tdflt=ReconstructedTransferFunction(dflt, nVanCittert=160)
+tdflt=ReconstructedTransferFunction(dflt, nVanCittert=100)
 
 #define inverse discrete filter
 vdflt=DiscreteFilter(wavenumber, isForward=False)

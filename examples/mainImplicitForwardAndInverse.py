@@ -9,7 +9,7 @@ from output import *
 #define waveno object
 wavenumber=Wavenumber()
 
-#define Gaussian filter having Delta/h 16
+#define Implicit filter
 flt=Implicit(wavenumber, -0.48)
 
 #define discrete filter
@@ -21,20 +21,20 @@ opt.run()
 ns=dflt.getNs()
 
 #define target for inverse discrete filter
-tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=160)
+tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=50)
 
 #define inverse discrete filter
 vdflt=DiscreteFilter(wavenumber, nStencil=ns, isForward=False)
 
 #run optimiser for inverse filter
-iopt=Optimiser(tdflt, vdflt)
+iopt=Optimiser(tdflt, vdflt, isPositive=False, isZeroDampingAtPi=False)
 iopt.run()
 
 VGTfunc=iopt.getSolution()
 
 #Output
-#out=Output("./fortran/", "coeffs", flt, dflt, tdflt, vdflt)
-#out.write()
+out=Output("./output/", "coeffs", flt, dflt, tdflt, vdflt)
+out.write()
 
 #Plot
 k=wavenumber.get()
@@ -43,6 +43,7 @@ plt.plot(k, dflt.getTransferFunction(), label="Discrete filter")
 plt.plot(k, VGTfunc, label="Product of inverse and discrete filters")
 plt.plot(k, tdflt.getTransferFunction(), 'ro', label="Target rec transfer function")
 plt.legend()
+plt.grid('on')
 plt.show()
 
 
