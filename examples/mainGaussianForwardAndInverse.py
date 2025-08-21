@@ -10,7 +10,7 @@ from output import *
 wavenumber=Wavenumber()
 
 #define Gaussian filter having Delta/h 8
-flt=Gaussian(wavenumber, 8.0)
+flt=Gaussian(wavenumber, 6.0)
 nsNominal=flt.getNominalStencil()
 
 #define discrete filter
@@ -21,7 +21,7 @@ opt=Optimiser(flt, dflt)
 opt.run()
 
 #define target for inverse discrete filter
-tdflt=ReconstructedTransferFunction(dflt, nVanCittert=100)
+tdflt=ReconstructedTransferFunction(dflt, nVanCittert=50)
 
 #define inverse discrete filter
 vdflt=DiscreteFilter(wavenumber, isForward=False)
@@ -30,7 +30,7 @@ vdflt=DiscreteFilter(wavenumber, isForward=False)
 iopt=Optimiser(tdflt, vdflt)
 iopt.run()
 
-VGTfunc=iopt.getSolution()
+VGTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
 
 #Write to file
 out=Output("./output/", "coeffs", flt, dflt, tdflt, vdflt)
@@ -40,6 +40,7 @@ out.write()
 k=wavenumber.get()
 plt.plot(k, flt.getTransferFunction(), 'ko', label="Filter")
 plt.plot(k, dflt.getTransferFunction(), label="Discrete filter")
+plt.plot(k, vdflt.getTransferFunction(), label="Inverse discrete filter")
 plt.plot(k, VGTfunc, label="Product of inverse and discrete filters")
 plt.plot(k, tdflt.getTransferFunction(), 'ro', label="Target rec transfer function")
 plt.legend()

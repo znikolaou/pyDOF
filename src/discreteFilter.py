@@ -7,11 +7,11 @@ class DiscreteFilter(Log, Const):
 
     Attributes: 
         wavenumberOb (Wavenumber): A wavenumber object.
-        nStencil     (int)       : The filter stencil size 2*nm+1 
+        nStencil (int): The filter stencil size (2*nm+1) 
                                    with the filter stencil spanning
                                    [-nm, nm].
-        isInverse    (bool)      : True for inverse discrete filter,
-                                   False for forward filter.
+        isForward (bool): True for forward discrete filter, False for 
+                          inverse filter.
 
     Author: Z. Nikolaou.
     """
@@ -23,7 +23,7 @@ class DiscreteFilter(Log, Const):
         self._isForward=isForward
         self.__checkSymmetric()
         self._k=self._wavenumber.get()
-        self._nk=len(self._k)
+        self._nk=self._wavenumber.getNk()
         self.__checkSufficientStencil()
         self.coeffs=None
         self.optError=None
@@ -40,8 +40,7 @@ class DiscreteFilter(Log, Const):
                     "stencil size < 3")
             exit()
 
-    def isForward(self):
-        return self._isForward
+    def isForward(self): return self._isForward
 
     def getAllCoeffs(self):
         if(self.coeffs!=None):
@@ -56,11 +55,9 @@ class DiscreteFilter(Log, Const):
 
     def getNk(self): return self._nk
 
-    def getNm(self):
-        return int((self._ns-1)/2)
+    def getNm(self): return int((self._ns-1)/2)
 
-    def getNmPlusOne(self):
-        return self.getNm()+1
+    def getNmPlusOne(self): return self.getNm()+1
 
     def getNs(self): return self._ns
 
@@ -74,24 +71,21 @@ class DiscreteFilter(Log, Const):
         self.coeffs=coeffs
         self.__setNsFromNmPlusOne(len(self.coeffs))
 
-    def setOptError(self, error):
-        self.optError=error
+    def setOptError(self, error): self.optError=error
 
     def getTransferFunction(self, halfCoeffs=None, nVanCittert=0):
         if(halfCoeffs is None): halfCoeffs=self.coeffs
         hg=np.zeros(self._nk)
         nh=len(halfCoeffs)
-        for i in range(self._nk):
+        for i in range(self._nk): 
             hg[i]=hg[i]+halfCoeffs[0]
             for j in range(1, nh):
                 hg[i]=hg[i]+Const.TWO*halfCoeffs[j]*np.cos(j*self._k[i])
-        if(nVanCittert==0): 
-            return hg
-        else: 
-            return self.__getReconstructedTransferFunction(hg, \
-                nVanCittert)
+
+        return self.__getReconstructedTransferFunction(hg,nVanCittert)
 
     def __getReconstructedTransferFunction(self, tFunc, nVanCittert):
+        if(nVanCittert==0): return tFunc
         q=np.zeros(self._nk)
         for i in range(self._nk):
             q[i]=self.ONE-(self.ONE-tFunc[i])**(nVanCittert+1)

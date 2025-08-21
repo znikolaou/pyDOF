@@ -7,11 +7,15 @@ from reconstructedTransferFunction import *
 #-----------------------------------------------------------------------
 class ObjectiveFunction(Errors):
     """
-    Class for the optimiser objective function. 
+    Class for calculating the optimiser objective function. 
 
     Attributes: 
-        targetOb (Filter, ReconstructedTransferFunction): Target. 
-        discreteFilterOb (DiscreteFilter): The discrete filter object.
+        target (Filter or ReconstructedTransferFunction): Target. 
+        discreteFilter (DiscreteFilter): The discrete filter object
+                                           whose coeffs must be found
+                                           by solving the optimisation
+                                           problem.
+        lamda (double): regularisation/smoothness parameter. 
 
     Author: Z. Nikolaou.
     """ 
@@ -27,11 +31,10 @@ class ObjectiveFunction(Errors):
     def get(self, coeffs):
         self._counter+=1
         if(isinstance(self._target, ReconstructedTransferFunction)):
-            self._lastSolution= \
-                    self._target.getVQTransferFunction(coeffs)
+            self._lastSolution=self._target.getVQTransferFunction(coeffs)
         else:
-            self._lastSolution= \
-                    self._dfilter.getTransferFunction(coeffs)
+            self._lastSolution= self._dfilter.getTransferFunction(coeffs)
+
         self._lastError=self.msqe(self._targetTfunc, self._lastSolution)
         self._gradError=np.mean(np.abs(np.gradient(self._targetTfunc)- \
                                 np.gradient(self._lastSolution)))

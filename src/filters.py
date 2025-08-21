@@ -32,11 +32,9 @@ class Filter(Log, Const):
             tf[i]=Const.ONE-(Const.ONE-self._tFunc[i])**(nv+1)
         return tf
       
-    def getNyquistDamping(self): 
-        return self._tFunc[len(self._k)-1]
+    def getNyquistDamping(self): return self._tFunc[len(self._k)-1]
 
-    def getTotalDamping(self):
-        return np.trapz(self._tFunc, self._k)
+    def getTotalDamping(self): return np.trapz(self._tFunc, self._k)
 
     def getDampingEfficiency(self):
         lk=max(self._k)-min(self._k)
@@ -46,11 +44,18 @@ class Filter(Log, Const):
     def name(self): pass
 
     @abstractmethod
-    def getNominalStencil(self):
-        pass
+    def getNominalStencil(self): pass
 #-----------------------------------------------------------------------
 class Gaussian(Filter):
-    
+    """
+    Class for Gaussian filter.
+
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        param (double): Delta/h ratio for controlling the filter shape. 
+
+    Author: Z. Nikolaou
+    """
     def __init__(self, wavenumber, param):
         self._k=wavenumber.get()
         self._param=param
@@ -72,6 +77,15 @@ class Gaussian(Filter):
         return math.sqrt(24.0*math.log(Const.TWO))/self._param
 #-----------------------------------------------------------------------
 class Helmholtz(Filter):
+    """
+    Class for the Helmholtz filter.
+
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        param (double): lambda for controlling the filter shape. 
+
+    Author: Z. Nikolaou
+    """
  
     def __init__(self, wavenumberOb, param):
         self._k=wavenumberOb.get()
@@ -79,8 +93,7 @@ class Helmholtz(Filter):
         self._tFunc=self.__buildTransferFunction()
         Filter.__init__(self, self._k, self._tFunc)
 
-    def name(self):
-        return "Helmholtz"
+    def name(self): return "Helmholtz"
 
     def getNominalStenicl(self): return int(2.0*7.0*self._param+1)
 
@@ -91,19 +104,26 @@ class Helmholtz(Filter):
             tFunc.append(hg)
         return tFunc
 
-    def getCutOff(self):
-        return Const.ONE/self._param
+    def getCutOff(self): return Const.ONE/self._param
 #-----------------------------------------------------------------------
 class Implicit(Filter):
+    """
+    Class for a 3-point implicit filter.
 
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        param (double): parameter for controlling the filter shape. 
+
+    Author: Z. Nikolaou
+    """
+ 
     def __init__(self, wavenumberOb, param):
         self._k=wavenumberOb.get()
         self._param=param
         self._tFunc=self.__buildTransferFunction()
         Filter.__init__(self, self._k, self._tFunc)
 
-    def name(self):
-        return "3-point Implicit"
+    def name(self): return "3-point Implicit"
 
     def __buildTransferFunction(self):
         tFunc=[]
@@ -113,19 +133,26 @@ class Implicit(Filter):
             tFunc.append(num/den)
         return tFunc
 
-    def getCutOff(self):
-        return np.arccos(-Const.TWO*self._param)
+    def getCutOff(self): return np.arccos(-Const.TWO*self._param)
 #-----------------------------------------------------------------------
 class SharpCutOff(Filter):
+    """
+    Class for a shartp cut-off filter.
 
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        param (double): filter cut-off wavenumber (kh). 
+
+    Author: Z. Nikolaou
+    """
+ 
     def __init__(self, wavenumberOb, param):
         self._k=wavenumberOb.get()
         self._param=param
         self._tFunc=self.__buildTransferFunction()
         Filter.__init__(self, self._k, self._tFunc)
 
-    def name(self):
-        return "Sharp cut-off"
+    def name(self): return "Sharp cut-off"
 
     def __buildTransferFunction(self):
         tFunc=[]
@@ -135,5 +162,7 @@ class SharpCutOff(Filter):
             else:
                 tFunc.append(Const.ZERO)
         return tFunc
+
+    def getCutOff(self): return self._param
 #-----------------------------------------------------------------------
 

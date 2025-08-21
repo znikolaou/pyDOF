@@ -7,13 +7,14 @@ class Const:
 
     Author: Z. Nikolaou.
     """
+
     ZERO=0.0e0
     HALF=0.5e0
     ONE=1.0e0
     TWO=2.0e0
     PI=np.pi
-    N=200
-    DIVERGENCE_FACTOR=1.50
+    NK_NOMINAL=200
+    DIVERGENCE_FACTOR=1.05
     TOL_NYQDAMP=0.1
     TOL_OPTIMISER=1.0e-6
     MAX_ITERATIONS=500

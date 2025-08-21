@@ -10,7 +10,7 @@ from output import *
 wavenumber=Wavenumber()
 
 #define Implicit filter
-flt=Implicit(wavenumber, -0.48)
+flt=Implicit(wavenumber, -0.45) #strict case
 
 #define discrete filter
 dflt=DiscreteFilter(wavenumber)
@@ -24,13 +24,13 @@ ns=dflt.getNs()
 tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=50)
 
 #define inverse discrete filter
-vdflt=DiscreteFilter(wavenumber, nStencil=ns, isForward=False)
+vdflt=DiscreteFilter(wavenumber, isForward=False)
 
 #run optimiser for inverse filter
-iopt=Optimiser(tdflt, vdflt, isPositive=False, isZeroDampingAtPi=False)
+iopt=Optimiser(tdflt, vdflt)
 iopt.run()
 
-VGTfunc=iopt.getSolution()
+VGTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
 
 #Output
 out=Output("./output/", "coeffs", flt, dflt, tdflt, vdflt)

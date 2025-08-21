@@ -2,6 +2,8 @@ from constants import *
 from discreteFilter import *
 from filters import *
 import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+import matplotlib.pyplot as plt
 #-----------------------------------------------------------------------
 class ReconstructedTransferFunction:
     """
@@ -9,6 +11,8 @@ class ReconstructedTransferFunction:
 
     Attributes: 
         discreteFilter (DiscreteFilter): the discrete filter object. 
+        targetForRecFilter (DiscreteFilter or Filter): target for the
+            reconstructed transfer function.
         coeffs (double []): List holding the discrete filter 
                                 coeffs g0, g1, ..., gM. 
         nVanCittert (int): The number of van Cittert iterations
@@ -20,42 +24,31 @@ class ReconstructedTransferFunction:
 
     def __init__(self, discreteFilter, targetForRecFilter=None, nVanCittert=0):
         self._dfilter=discreteFilter
-        if targetForRecFilter is None: 
-            self._target=discreteFilter
-        else:
-            self._target=targetForRecFilter
-        if isinstance(self._target, DiscreteFilter):
-            isDiscreteTarget=True
-        elif isinstance(self._target, Filter):
-            isDiscreteTarget=False
+        if targetForRecFilter is None: self._target=self._dfilter
+        else: self._target=targetForRecFilter
+        if isinstance(self._target, DiscreteFilter): isDiscreteTarget=True
+        elif isinstance(self._target, Filter): isDiscreteTarget=False
         else:
             print('Error: no such filter instance')
             exit()
         self._nV=nVanCittert
         self._forCoeffs=self._dfilter.coeffs
-        self._forTfunc=\
-                self._dfilter.getTransferFunction(self._forCoeffs)
+        self._forTfunc=self._dfilter.getTransferFunction(self._forCoeffs)
         if isDiscreteTarget:
-            self._recTfunc= \
-                self._dfilter.getTransferFunction(self._forCoeffs, \
-                self._nV)
+            self._recTfunc=self._dfilter.getTransferFunction(self._forCoeffs, self._nV)
         else:
             self._recTfunc=self._target.getTransferFunction(self._nV)
 
         self.name="Inverse filter at N van Cittert="+str(nVanCittert)
 
-    def name(self):
-        return "Inverse filter at N van Cittert="+str(self._nV)
+    def name(self): return "Inverse filter at N van Cittert="+str(self._nV)
 
     def getTransferFunction(self): return self._recTfunc
 
     def getOriginalTransferFunction(self): return self._forTfunc 
 
     def getVQTransferFunction(self, vCoeffs):
-        #returns Vd*Qd
-        vgTfunc=self._forTfunc*\
-                self._dfilter.getTransferFunction(vCoeffs)
-        return vgTfunc
+        return self._forTfunc*self._dfilter.getTransferFunction(vCoeffs)
 
     def getNvanCittert(self): return self._nV
 #-----------------------------------------------------------------------

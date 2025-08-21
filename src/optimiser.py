@@ -7,21 +7,21 @@ class Optimiser(Const, Log):
     Class for the optimiser. 
 
     Attributes: 
-        target: Target, ReconstructedTransferFunction 
-            The target to optimise against. 
-        discreteFilter: DiscreteFilter 
-            The discrete filter object whose coeffs we solve for.
-        method: "SLSQP", "trust-constr", ... 
-            The optimiser method to use for constrained optimisation. 
-            Suggested candidates are  "SLSQP", and "trust-constr". 
-        isZeroDampingAtPi: True, False 
-            If true then \hat{G}(pi)=0 always. 
-        isPositive: True, False 
-            If true then \hat{G}(k) > 0 for all k in [0, pi). 
-        isAdaptive: True, False 
-            If true, the discrete filter stencil size will increase 
-            until the target optimisation error Const.TOL_OPTIMISER 
-            is reached.
+        target (Filter or ReconstructedTransferFunction): the target to 
+            optimise against. 
+        discreteFilter (DiscreteFilter): the discrete filter object 
+            whose coeffs we solve for.
+        method (string): the optimiser method to use for constrained 
+            optimisation. Suggested candidates are  "SLSQP", and 
+            "trust-constr". 
+        isZeroDampingAtPi (boolean): True, False. If true, then 
+            \hat{G}(pi)=0 always. 
+        isPositive (boolean): True, False. If true, then 
+            \hat{G}(k) > 0 for all k in [0, pi). 
+        isAdaptive (boolean): True, False. If true, the discrete filter 
+            stencil size will increase until the target optimisation error 
+            Const.TOL_OPTIMISER is reached.
+        lamda (float): regularisation/smoothness parameter.
 
     Author: Z. Nikolaou.
     """
@@ -39,23 +39,22 @@ class Optimiser(Const, Log):
         self._objFunc=ObjectiveFunction(self._target, self._dfilter, \
                 lamda=self._lamda)
         self._nk=self._dfilter.getNk()
-        self._isInverse=self.__isInverse(self._target)
+        self._isInverse=not self._dfilter.isForward()
         self._nVanCittert=self.__getNvanCittert()
         self._solution=None
         self._error=None
         self._uncMethod='BFGS'
+        self.__printInfo()
  
-    def __isInverse(self, targetOb):
-        if(isinstance(targetOb, ReconstructedTransferFunction)):
+    def __printInfo(self):
+        if(self._isInverse):
             print('')
             print("Optimiser will run for inverse discrete filter")
             print('')
-            return True
         else:
             print('')
             print("Optimiser will run for forward discrete filter")
             print('')
-            return False
 
     def __getNvanCittert(self):
         nv=None
@@ -71,6 +70,12 @@ class Optimiser(Const, Log):
                 constraints=constraintsList)
         return solution
 
+    def __getConstrainedSolutionForLinearInverseFilter(self, xo, constraintsList):
+        #TODO
+        solution=minimize(self._objFunc.get, xo, method=self._method, \
+                constraints=constraintsList)
+        return solution
+
     def run(self): 
         isConverged=False
         maxIter=1
@@ -81,15 +86,21 @@ class Optimiser(Const, Log):
         if self._isAdaptive: maxIter=Const.MAX_ITERATIONS
         for i in range(maxIter):
             solUnc=self.__getUnConstrainedSolution(self.__getInitialGuess(nmp1))
-            self._solution=self.__getConstrainedSolution(solUnc.x, self.__getConstraintsList(nmp1))
+            x=solUnc.x
+            if(self._isInverse):
+                solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForLinearInverse(nmp1))
+                x=solUnc.x
+            self._solution=self.__getConstrainedSolution(x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
-            self.__printIterInfo(itr, nmp1, self._error)
+            self.__printIterInfo(itr, nmp1, self._error) 
             if self.__isConverged(self._error): 
                 isConverged=True
                 break
             #TODO: implement more sophisticated error controller
-            if self.__isDiverging(itr, self._error, errorOld, solOld): 
+            if self.__isDiverging(itr, self._error, errorOld): 
                 isConverged=False
+                self._solution=solOld
+                self._error=errorOld
                 break
             nmp1+=1
             itr+=1
@@ -99,23 +110,19 @@ class Optimiser(Const, Log):
         if isConverged:
             print('\n*Success: converged at iteration ', itr, 'error=', self._error)
         else:
-            print('\n*Failure to converge')
+            print('\n*Failure to converge for tolerance=',Const.TOL_OPTIMISER)
         self._dfilter.setCoeffs(self.get())
         self._dfilter.setOptError(self._error)
                
     def __isConverged(self, error):
-        if error<=Const.TOL_OPTIMISER: 
-            return True
-        else:
-            return False
+        if error<=Const.TOL_OPTIMISER: return True
+        else: return False
     
-    def __isDiverging(self, itr, error, errorOld, solOld):
+    def __isDiverging(self, itr, error, errorOld):
         if itr>1:
             if error>Const.DIVERGENCE_FACTOR*errorOld:
                     print('*Increasing error detected, error=', error, 'errorOld=', errorOld)
                     print('*Reverting to last solution ...')
-                    self._solution=solOld
-                    self._error=errorOld
                     return True
             else:
                 return False
@@ -123,13 +130,22 @@ class Optimiser(Const, Log):
             return False
 
     def get(self): return self._solution.x
-
-    def getSolution(self): return self._objFunc.getLastSolution()
-
+ 
     def __printIterInfo(self, itr, nmp1, error):
         print("Iteration=", itr, "stencil size (nm+1)=", nmp1, \
                         "error=", error)
-            
+    
+    def __getInitialGuessForLinearInverse(self, nmp1):
+        #TODO:
+
+        A=self.__getConstraintMatrixA(nmp1)
+        
+        gLinear=np.zeros(nmp1)
+        for i in range(nmp1):
+            k=Const.PI/(nmp1-1)*i
+            gLinear[i]=Const.ONE+k*(self._nVanCittert+1)/Const.PI
+        return np.linalg.solve(A, gLinear)
+
     def __getInitialGuess(self, nmp1):
         xo=np.zeros(nmp1)
         xo[:]=Const.ONE/(2*(nmp1-1)+Const.ONE)
@@ -154,15 +170,29 @@ class Optimiser(Const, Log):
         return LinearConstraint(matrixA[0, :], Const.ONE, Const.ONE)
 
     def __getConstraintZeroToOne(self, matrixA):
-        #TODO: implement non-zero thresholding! 
         return LinearConstraint(matrixA[1:self._nk-1, :], Const.ZERO, Const.ONE)
 
     def __getConstraintZeroDampingAtPi(self, matrixA):
         return LinearConstraint(matrixA[self._nk-1, :], Const.ZERO, \
                 Const.ZERO)
 
+    def __getConstraintFixedValueAtPi(self, matrixA, valueAtPi):
+        return LinearConstraint(matrixA[self._nk-1, :], valueAtPi, \
+                valueAtPi)
+
+    def __getConstraintLinearOneToNPlusOne(self, matrixA):
+        k=self._dfilter.getK()
+        gLinear=np.zeros(self._nk)
+        for i in range(self._nk):
+            gLinear[i]=Const.One+k[i]*(self._nVanCittert+1)/Const.PI
+        bl=np.ndarray(self._nk)
+        br=np.ndarray(self._nk)
+        bl[:]=gLinear[i]
+        br[:]=gLinear[i] #TODO: possible divide by zero here
+        return LinearConstraint(matrixA[0:self._nk, :], bl[0:self._nk], br[0:self._nk])
+
     def __getConstraintBetweenOneAndNPlusOne(self, matrixA):
-        return LinearConstraint(matrixA[1:self._nk, :], Const.ONE, \
+        return LinearConstraint(matrixA[1:self._nk-1, :], Const.ONE, \
                     self._nVanCittert+1)
 
     def __getConstraintBetweenOneAndInfinity(self, matrixA):
@@ -174,21 +204,22 @@ class Optimiser(Const, Log):
         br=np.ndarray(self._nk)
         bl[:]=Const.ONE
         br[:]=Const.ONE/hg[:] #TODO: possible divide by zero here
-        return LinearConstraint(matrixA[1:, :], bl[1:], br[1:])
+        return LinearConstraint(matrixA[1:self._nk, :], bl[1:self._nk], br[1:self._nk])
 
     def __getConstraintsList(self, nmp1):
         A=self.__getConstraintMatrixA(nmp1)
         constraintsList=[]
         constraintsList.append(self.__getConstraintConsistency(A))
-        if(self._isInverse):
+        if(self._isInverse): 
+            constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
             #constraintsList.append(self.__getConstraintBetweenOneAndOneOverHGd(A))
-            #constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
-            #constraintsList.append(self.__getConstraintBetweenOneAndInfinity(A))
-            return constraintsList
-        if(self._isPositive): 
-            constraintsList.append(self.__getConstraintZeroToOne(A))
-        if(self._isZeroDampingAtPi): 
-            constraintsList.append(self.__getConstraintZeroDampingAtPi(A))
+            #constraintsList.append(self.__getConstraintFixedValueAtPi(A,self._nVanCittert+1))
+        else:
+            if(self._isPositive): 
+                constraintsList.append(self.__getConstraintZeroToOne(A))
+            if(self._isZeroDampingAtPi): 
+                constraintsList.append(self.__getConstraintZeroDampingAtPi(A))
+        
         return constraintsList
 
   
