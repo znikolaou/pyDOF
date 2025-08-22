@@ -96,7 +96,7 @@ class FortranGenerator(Const):
             coeffsArray[:]=0.0e0
             coeffsArray[0:nc]=ob.coeffs[0:nc]
             self.__writeDataF90(COEFS+'(:,'+str(j+1)+')', coeffsArray, \
-                    self.NUM_FORMAT)
+                    self.NUM_FORMAT_LONG)
     
         self.__writeIntegersF90([NXMX,NYMX,NZMX])
         self.__writeParam(NXMX, str(nxmx))
@@ -163,7 +163,7 @@ class FortranGenerator(Const):
             coeffsArray[:]=0.0e0
             coeffsArray[0:nc]=ob.coeffs[0:nc]
             self.__writeData(COEFS+'(:,'+str(j+1)+')', coeffsArray, \
-                    self.NUM_FORMAT)
+                    self.NUM_FORMAT_LONG)
         #common block work arrays
         self.__writeComment('')
         self.__writeComment('COMMON BLOCK DATA')

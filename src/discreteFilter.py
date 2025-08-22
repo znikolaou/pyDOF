@@ -6,10 +6,9 @@ class DiscreteFilter(Log, Const):
     stencil.
 
     Attributes: 
-        wavenumberOb (Wavenumber): A wavenumber object.
+        wavenumber (Wavenumber): A wavenumber object.
         nStencil (int): The filter stencil size (2*nm+1) 
-                                   with the filter stencil spanning
-                                   [-nm, nm].
+                        with the filter stencil spanning [-nm, nm].
         isForward (bool): True for forward discrete filter, False for 
                           inverse filter.
 

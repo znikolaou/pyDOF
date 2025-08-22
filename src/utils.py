@@ -57,5 +57,5 @@ class Form(Const):
     def short(number): return Const.NUM_FORMAT_SHORT(number)
 
     @staticmethod
-    def long(number): return Const.NUM_FORMAT(number)
+    def long(number): return Const.NUM_FORMAT_LONG(number)
 #-----------------------------------------------------------------------

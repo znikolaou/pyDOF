@@ -13,14 +13,14 @@ class Const:
     ONE=1.0e0
     TWO=2.0e0
     PI=np.pi
-    NK_NOMINAL=200
+    NK_NOMINAL=400
     DIVERGENCE_FACTOR=1.05
     TOL_NYQDAMP=0.1
     TOL_OPTIMISER=1.0e-6
     MAX_ITERATIONS=500
     #
     NUM_FORMAT_SHORT="{:.8e}.".format
-    NUM_FORMAT="{:.16e}".format
+    NUM_FORMAT_LONG="{:.16e}".format
     #
     DATE=datetime.datetime.now()
     MONTH=DATE.month
