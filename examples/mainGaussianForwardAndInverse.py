@@ -20,6 +20,7 @@ dflt=DiscreteFilter(wavenumber, nStencil=nsNominal)
 opt=Optimiser(flt, dflt)
 opt.run()
 
+exit()
 #define target for inverse discrete filter
 tdflt=ReconstructedTransferFunction(dflt, nVanCittert=50)
 

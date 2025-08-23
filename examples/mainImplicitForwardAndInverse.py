@@ -10,7 +10,7 @@ from output import *
 wavenumber=Wavenumber()
 
 #define Implicit filter
-flt=Implicit(wavenumber, -0.45) #strict case
+flt=Implicit(wavenumber, 0.45) #strict case
 
 #define discrete filter
 dflt=DiscreteFilter(wavenumber)
@@ -19,7 +19,7 @@ dflt=DiscreteFilter(wavenumber)
 opt=Optimiser(flt, dflt)
 opt.run()
 ns=dflt.getNs()
-
+exit()
 #define target for inverse discrete filter
 tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=50)
 

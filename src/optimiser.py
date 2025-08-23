@@ -70,12 +70,6 @@ class Optimiser(Const, Log):
                 constraints=constraintsList)
         return solution
 
-    def __getConstrainedSolutionForLinearInverseFilter(self, xo, constraintsList):
-        #TODO
-        solution=minimize(self._objFunc.get, xo, method=self._method, \
-                constraints=constraintsList)
-        return solution
-
     def run(self): 
         isConverged=False
         maxIter=1
@@ -85,11 +79,10 @@ class Optimiser(Const, Log):
         solOld=None
         if self._isAdaptive: maxIter=Const.MAX_ITERATIONS
         for i in range(maxIter):
-            solUnc=self.__getUnConstrainedSolution(self.__getInitialGuess(nmp1))
-            x=solUnc.x
+            x=self.__getInitialGuessForThreePointForward(nmp1)
             if(self._isInverse):
-                solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForLinearInverse(nmp1))
-                x=solUnc.x
+                solUnc=self.__getUnConstrainedSolution(self.__getInitialGuess(nmp1))
+                x=solUnc.x 
             self._solution=self.__getConstrainedSolution(x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
             self.__printIterInfo(itr, nmp1, self._error) 
@@ -135,16 +128,17 @@ class Optimiser(Const, Log):
         print("Iteration=", itr, "stencil size (nm+1)=", nmp1, \
                         "error=", error)
     
-    def __getInitialGuessForLinearInverse(self, nmp1):
-        #TODO:
+    def __getInitialGuessForThreePointForward(self, nmp1):
+        xo=np.zeros(nmp1)
+        xo[0]=Const.HALF
+        xo[1]=Const.HALF*Const.HALF
+        return xo
 
-        A=self.__getConstraintMatrixA(nmp1)
-        
-        gLinear=np.zeros(nmp1)
-        for i in range(nmp1):
-            k=Const.PI/(nmp1-1)*i
-            gLinear[i]=Const.ONE+k*(self._nVanCittert+1)/Const.PI
-        return np.linalg.solve(A, gLinear)
+    def __getInitialGuessForThreePointInverse(self, nmp1, nVan):
+        xo=np.zeros(nmp1)
+        xo[0]=nVan*Const.HALF+Const.ONE
+        xo[1]=-nVan*Const.HALF*Const.HALF
+        return xo
 
     def __getInitialGuess(self, nmp1):
         xo=np.zeros(nmp1)
