@@ -32,9 +32,13 @@ class ObjectiveFunction(Errors):
         self._counter+=1
         if(isinstance(self._target, ReconstructedTransferFunction)):
             self._lastSolution=self._target.getVQTransferFunction(coeffs)
+            #print("INVERSE")
+            #plt.plot(self._dfilter.getTransferFunction(coeffs))
+            #plt.plot(self._lastSolution)
+            #plt.show()
         else:
             self._lastSolution= self._dfilter.getTransferFunction(coeffs)
-
+            
         self._lastError=self.msqe(self._targetTfunc, self._lastSolution)
         self._gradError=np.mean(np.abs(np.gradient(self._targetTfunc)- \
                                 np.gradient(self._lastSolution)))

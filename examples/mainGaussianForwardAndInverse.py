@@ -14,18 +14,18 @@ flt=Gaussian(wavenumber, 6.0)
 nsNominal=flt.getNominalStencil()
 
 #define discrete filter
+print("nsNominal",nsNominal)
 dflt=DiscreteFilter(wavenumber, nStencil=nsNominal)
 
 #run optimiser for forward filter
 opt=Optimiser(flt, dflt)
 opt.run()
 
-exit()
 #define target for inverse discrete filter
 tdflt=ReconstructedTransferFunction(dflt, nVanCittert=50)
 
 #define inverse discrete filter
-vdflt=DiscreteFilter(wavenumber, isForward=False)
+vdflt=DiscreteFilter(wavenumber, isForward=False, nStencil=dflt.getNs())
 
 #run optimiser for inverse filter
 iopt=Optimiser(tdflt, vdflt)

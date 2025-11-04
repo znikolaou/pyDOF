@@ -69,7 +69,7 @@ class DiscreteFilter(Log, Const):
         """
         self.coeffs=coeffs
         self.__setNsFromNmPlusOne(len(self.coeffs))
-
+    
     def setOptError(self, error): self.optError=error
 
     def getTransferFunction(self, halfCoeffs=None, nVanCittert=0):

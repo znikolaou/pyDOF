@@ -81,8 +81,18 @@ class Optimiser(Const, Log):
         for i in range(maxIter):
             x=self.__getInitialGuessForThreePointForward(nmp1)
             if(self._isInverse):
+                #0
                 solUnc=self.__getUnConstrainedSolution(self.__getInitialGuess(nmp1))
                 x=solUnc.x 
+                #1 slightly better
+                #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForThreePointForward(nmp1))
+                #2 slightly best
+                #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForThreePointInverse(nmp1, self._nVanCittert*2))
+                #x=solUnc.x
+                #x=self.__getInitialGuessForThreePointInverse(nmp1, self._nVanCittert)
+                 
+                #TODO: implement improved initial guess
+
             self._solution=self.__getConstrainedSolution(x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
             self.__printIterInfo(itr, nmp1, self._error) 
@@ -142,6 +152,7 @@ class Optimiser(Const, Log):
 
     def __getInitialGuess(self, nmp1):
         xo=np.zeros(nmp1)
+        #xo[0]=Const.ONE
         xo[:]=Const.ONE/(2*(nmp1-1)+Const.ONE)
         return xo
 
@@ -204,7 +215,7 @@ class Optimiser(Const, Log):
         A=self.__getConstraintMatrixA(nmp1)
         constraintsList=[]
         constraintsList.append(self.__getConstraintConsistency(A))
-        if(self._isInverse): 
+        if(self._isInverse):
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
             #constraintsList.append(self.__getConstraintBetweenOneAndOneOverHGd(A))
             #constraintsList.append(self.__getConstraintFixedValueAtPi(A,self._nVanCittert+1))

@@ -10,21 +10,21 @@ from output import *
 wavenumber=Wavenumber()
 
 #define Implicit filter
-flt=Implicit(wavenumber, 0.45) #strict case
+flt=Implicit(wavenumber, -0.45) #strict case
 
 #define discrete filter
-dflt=DiscreteFilter(wavenumber)
+dflt=DiscreteFilter(wavenumber, nStencil=27)
 
 #run optimiser for forward filter
 opt=Optimiser(flt, dflt)
 opt.run()
 ns=dflt.getNs()
-exit()
+
 #define target for inverse discrete filter
 tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=50)
 
 #define inverse discrete filter
-vdflt=DiscreteFilter(wavenumber, isForward=False)
+vdflt=DiscreteFilter(wavenumber, isForward=False, nStencil=33)
 
 #run optimiser for inverse filter
 iopt=Optimiser(tdflt, vdflt)
