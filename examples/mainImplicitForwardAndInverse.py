@@ -6,44 +6,32 @@ from objectiveFunction import *
 from optimiser import *
 from output import * 
 
-#define waveno object
 wavenumber=Wavenumber()
+flt=Implicit(wavenumber, -0.262)
+dflt=DiscreteFilter(wavenumber)
 
-#define Implicit filter
-flt=Implicit(wavenumber, -0.45) #strict case
-
-#define discrete filter
-dflt=DiscreteFilter(wavenumber, nStencil=27)
-
-#run optimiser for forward filter
-opt=Optimiser(flt, dflt)
+opt=Optimiser(flt, dflt, isAdaptive=True)
 opt.run()
 ns=dflt.getNs()
 
-#define target for inverse discrete filter
-tdflt=ReconstructedTransferFunction(dflt, flt, nVanCittert=50)
-
-#define inverse discrete filter
-vdflt=DiscreteFilter(wavenumber, isForward=False, nStencil=33)
-
-#run optimiser for inverse filter
-iopt=Optimiser(tdflt, vdflt)
+recTfunc=ReconstructedTransferFunction(dflt, flt, nVanCittert=100)
+vdflt=DiscreteFilter(wavenumber, isForward=False)
+iopt=Optimiser(recTfunc, vdflt, isMonotonic=True, isAdaptive=True)
 iopt.run()
 
-VGTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
+vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
 
-#Output
-out=Output("./output/", "coeffs", flt, dflt, tdflt, vdflt)
+out=Output("./output/", "coeffs", flt, dflt, recTfunc, vdflt)
 out.write()
 
-#Plot
 k=wavenumber.get()
-plt.plot(k, flt.getTransferFunction(), 'ko', label="Filter")
-plt.plot(k, dflt.getTransferFunction(), label="Discrete filter")
-plt.plot(k, VGTfunc, label="Product of inverse and discrete filters")
-plt.plot(k, tdflt.getTransferFunction(), 'ro', label="Target rec transfer function")
+plt.plot(k, flt.getTransferFunction(), 'ko', label="$G$")
+plt.plot(k, dflt.getTransferFunction(), label="$G_d$")
+plt.plot(k, recTfunc.getTransferFunction(), 'ro', label="${Q_d}^N$")
+plt.plot(k, vgTfunc, label="$V_dG_d$")
 plt.legend()
 plt.grid('on')
+plt.xlabel('$kh$')
 plt.show()
 
 

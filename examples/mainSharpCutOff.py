@@ -4,27 +4,23 @@ from discreteFilter import *
 from filters import *
 from objectiveFunction import *
 from optimiser import *
+from output import *
 
-#define waveno object
 wavenumber=Wavenumber()
 
-#define sharp cut-off filter at pi/2.0
 flt=SharpCutOff(wavenumber, np.pi/2.0)
+dflt=DiscreteFilter(wavenumber,nStencil=31)
 
-#define discrete filter
-dflt=DiscreteFilter(wavenumber,nStencil=41)
-
-#run optimiser
-opt=Optimiser(flt, dflt, isAdaptive=False, lamda=10.0)
+opt=Optimiser(flt, dflt, isMonotonic=False, isAdaptive=False)
 opt.run()
-print("Optimised discrete filter coeffs=", dflt.coeffs)
-plt.plot(wavenumber.get(), flt.getTransferFunction(), 'ko', label="$\hat{G}$")
-plt.plot(wavenumber.get(), dflt.getTransferFunction(), label="$\hat{G}_d$")
+
+out=Output("./output/", "coeffs", flt, dflt)
+out.write()
+
+plt.plot(wavenumber.get(), flt.getTransferFunction(), 'ko', label="$G$")
+plt.plot(wavenumber.get(), dflt.getTransferFunction(), label="$G_d$")
 plt.grid("on")
-plt.xlabel("k")
+plt.xlabel("$kh$")
 plt.legend()
 plt.show()
 
-#write to file
-#output=Output("./output/", coeffs, flt, dflt)
-#output.writeToFile("filterCoeffs")

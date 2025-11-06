@@ -26,7 +26,7 @@ class Optimiser(Const, Log):
     Author: Z. Nikolaou.
     """
     def __init__(self, target, discreteFilter, method="SLSQP",  \
-            isZeroDampingAtPi=True, isPositive=True, isAdaptive=True, \
+            isZeroDampingAtPi=True, isPositive=True, isMonotonic=False, isAdaptive=True, \
             lamda=0.e0): 
         Log.__init__(self, type(self).__name__) 
         self._target=target
@@ -34,10 +34,10 @@ class Optimiser(Const, Log):
         self._method=method
         self._isZeroDampingAtPi=isZeroDampingAtPi
         self._isPositive=isPositive
+        self._isMonotonic=isMonotonic
         self._isAdaptive=isAdaptive
         self._lamda=lamda
-        self._objFunc=ObjectiveFunction(self._target, self._dfilter, \
-                lamda=self._lamda)
+        self._objFunc=ObjectiveFunction(self._target, self._dfilter, lamda=self._lamda)
         self._nk=self._dfilter.getNk()
         self._isInverse=not self._dfilter.isForward()
         self._nVanCittert=self.__getNvanCittert()
@@ -62,7 +62,8 @@ class Optimiser(Const, Log):
         return nv
 
     def __getUnConstrainedSolution(self, xo): 
-        solution=minimize(self._objFunc.get, xo, method=self._uncMethod)
+        #solution=minimize(self._objFunc.get, xo, method=self._uncMethod)
+        solution=minimize(self._objFunc.get, xo, method='BFGS')
         return solution
 
     def __getConstrainedSolution(self, xo, constraintsList):
@@ -80,19 +81,21 @@ class Optimiser(Const, Log):
         if self._isAdaptive: maxIter=Const.MAX_ITERATIONS
         for i in range(maxIter):
             x=self.__getInitialGuessForThreePointForward(nmp1)
-            if(self._isInverse):
+            if(self._isInverse): 
+                pass
                 #0
-                solUnc=self.__getUnConstrainedSolution(self.__getInitialGuess(nmp1))
-                x=solUnc.x 
+                #x=self.__getInitialGuess(nmp1)
+                #x=self.__getInitialGuessForThreePointForward(nmp1)
+                #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuess(nmp1))
+                #x=solUnc.x 
                 #1 slightly better
                 #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForThreePointForward(nmp1))
+                #x=solUnc.x
                 #2 slightly best
-                #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForThreePointInverse(nmp1, self._nVanCittert*2))
+                #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForThreePointInverse(nmp1, self._nVanCittert))
                 #x=solUnc.x
                 #x=self.__getInitialGuessForThreePointInverse(nmp1, self._nVanCittert)
-                 
-                #TODO: implement improved initial guess
-
+                  
             self._solution=self.__getConstrainedSolution(x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
             self.__printIterInfo(itr, nmp1, self._error) 
@@ -109,11 +112,14 @@ class Optimiser(Const, Log):
             itr+=1
             errorOld=self._error
             solOld=self._solution
+            xOld=solOld.x
  
         if isConverged:
             print('\n*Success: converged at iteration ', itr, 'error=', self._error)
         else:
-            print('\n*Failure to converge for tolerance=',Const.TOL_OPTIMISER)
+            print('\n*Failure to converge for tolerance=', Const.TOL_OPTIMISER)
+            print('\tOptimisation error attained=', self._error)
+
         self._dfilter.setCoeffs(self.get())
         self._dfilter.setOptError(self._error)
                
@@ -171,8 +177,23 @@ class Optimiser(Const, Log):
                 A[i,l]=Const.TWO*np.cos(l*k[i])
         return A
 
+    def __getConstraintMatrixD(self, nmp1):
+        k=self._dfilter.getK()
+        D=np.ndarray((self._nk, nmp1))
+        D[:,0]=Const.ZERO
+        for i in range(self._nk):
+            for l in range(1, nmp1):
+                D[i,l]=l*np.sin(l*k[i])
+        return D
+
     def __getConstraintConsistency(self, matrixA):
         return LinearConstraint(matrixA[0, :], Const.ONE, Const.ONE)
+
+    def __getConstraintMonotonicPos(self, matrixD):
+        return LinearConstraint(matrixD[:, :], Const.ZERO, np.inf)
+
+    def __getConstraintMonotonicNeg(self, matrixD):
+        return LinearConstraint(matrixD[:, :], -np.inf, Const.ZERO)
 
     def __getConstraintZeroToOne(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk-1, :], Const.ZERO, Const.ONE)
@@ -197,8 +218,7 @@ class Optimiser(Const, Log):
         return LinearConstraint(matrixA[0:self._nk, :], bl[0:self._nk], br[0:self._nk])
 
     def __getConstraintBetweenOneAndNPlusOne(self, matrixA):
-        return LinearConstraint(matrixA[1:self._nk-1, :], Const.ONE, \
-                    self._nVanCittert+1)
+        return LinearConstraint(matrixA[1:self._nk-1, :], Const.ONE, self._nVanCittert+1)
 
     def __getConstraintBetweenOneAndInfinity(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk, :], Const.ONE, np.inf)
@@ -213,17 +233,16 @@ class Optimiser(Const, Log):
 
     def __getConstraintsList(self, nmp1):
         A=self.__getConstraintMatrixA(nmp1)
+        D=self.__getConstraintMatrixD(nmp1)
         constraintsList=[]
         constraintsList.append(self.__getConstraintConsistency(A))
         if(self._isInverse):
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
-            #constraintsList.append(self.__getConstraintBetweenOneAndOneOverHGd(A))
-            #constraintsList.append(self.__getConstraintFixedValueAtPi(A,self._nVanCittert+1))
+            if(self._isMonotonic): constraintsList.append(self.__getConstraintMonotonicNeg(D))
         else:
-            if(self._isPositive): 
-                constraintsList.append(self.__getConstraintZeroToOne(A))
-            if(self._isZeroDampingAtPi): 
-                constraintsList.append(self.__getConstraintZeroDampingAtPi(A))
+            if(self._isMonotonic): constraintsList.append(self.__getConstraintMonotonicPos(D))
+            if(self._isPositive): constraintsList.append(self.__getConstraintZeroToOne(A))
+            if(self._isZeroDampingAtPi): constraintsList.append(self.__getConstraintZeroDampingAtPi(A))
         
         return constraintsList
 

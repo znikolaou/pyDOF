@@ -2,15 +2,13 @@ from utils import *
 #-----------------------------------------------------------------------
 class DiscreteFilter(Log, Const):
     """
-    Class for representing a discrete symmetric filter on a given 
+    Class for representing a discrete filter on a given 
     stencil.
 
     Attributes: 
         wavenumber (Wavenumber): A wavenumber object.
-        nStencil (int): The filter stencil size (2*nm+1) 
-                        with the filter stencil spanning [-nm, nm].
-        isForward (bool): True for forward discrete filter, False for 
-                          inverse filter.
+        nStencil (int): The filter stencil size 2*nm+1 spanning [-nm, nm].
+        isForward (bool): True for forward filter, False for inverse.
 
     Author: Z. Nikolaou.
     """
@@ -28,26 +26,23 @@ class DiscreteFilter(Log, Const):
         self.optError=None
 
     def __checkSymmetric(self):
-        if(self._ns%2 == 0): 
-            self.printError("__checkSymmetric", \
-                    "stencil size not symmetric ")
+        if self._ns%2==0: 
+            self.printError("__checkSymmetric", "stencil size not symmetric ")
             exit()
 
     def __checkSufficientStencil(self):
-        if(self._ns<3): 
-            self.printError("_checkSufficientStencil",  \
-                    "stencil size < 3")
+        if self._ns<3: 
+            self.printError("_checkSufficientStencil", "stencil size<3")
             exit()
 
     def isForward(self): return self._isForward
 
     def getAllCoeffs(self):
-        if(self.coeffs!=None):
+        if self.coeffs!=None:
             nh=len(self.coeffs)
             allCoeffs=[]
             allCoeffs=self.coeffs
-            for i in range(1, nh):
-                allCoeffs.insert(0,coeffs[i])
+            for i in range(1, nh): allCoeffs.insert(0,coeffs[i])
         return allCoeffs
 
     def getK(self): return self._k

@@ -1,13 +1,11 @@
 from include import *
 from filters import *
+import numpy as np
 
 k=Wavenumber()
-gaus=Gaussian(k, 4.0)
-plt.plot(k.get(), gaus.get())
-plt.show()
+butter=Butterworth(k, 4, np.pi/4.0)
 
-print(gaus.getCutOff())
-print(gaus.getNyqDamping())
-print(gaus.getEfficiency())
+plt.plot(k.get(), butter.getTransferFunction())
+plt.show()
 
 

@@ -33,6 +33,7 @@ class ObjectiveFunction(Errors):
         if(isinstance(self._target, ReconstructedTransferFunction)):
             self._lastSolution=self._target.getVQTransferFunction(coeffs)
             #print("INVERSE")
+            #print(coeffs)
             #plt.plot(self._dfilter.getTransferFunction(coeffs))
             #plt.plot(self._lastSolution)
             #plt.show()

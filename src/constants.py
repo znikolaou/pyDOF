@@ -14,7 +14,7 @@ class Const:
     TWO=2.0e0
     PI=np.pi
     NK_NOMINAL=400
-    DIVERGENCE_FACTOR=1.05
+    DIVERGENCE_FACTOR=1.10
     TOL_NYQDAMP=0.1
     TOL_OPTIMISER=1.0e-6
     MAX_ITERATIONS=500
@@ -26,13 +26,10 @@ class Const:
     MONTH=DATE.month
     YEAR=DATE.year
     #
-    LOGO="! PYDOF "
+    LOGO="! PYDOF 2025"
     AUTHOR='! Author: Z. Nikolaou '
     IS_AUTO='! This is an auto-generated file: '+str(DATE)
     LINE="!-------------------------------------------------------------"
     HEADER_OUT=LINE+"\n"+LOGO+"\n"+IS_AUTO+"\n"+AUTHOR+"\n"+LINE
-    #
-    FORTRAN_HEADER='pydof_common.h'
-    F90MODULE='pydofFilterDataModule.f90'
-#-----------------------------------------------------------------------
+    #-----------------------------------------------------------------------
 
