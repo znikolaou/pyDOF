@@ -1,5 +1,6 @@
 from constants import *
 from utils import *
+from scipy.optimize import fsolve
 #-----------------------------------------------------------------------
 class Filter(Log, Const):
     """
@@ -48,7 +49,7 @@ class Filter(Log, Const):
 #-----------------------------------------------------------------------
 class Gaussian(Filter):
     """
-    Class for Gaussian filter.
+    Class for Gaussian filter: ^G(k)=exp(-Delta**2k**2/24)
 
     Attributes: 
         wavenumber (Wavenumber): the wavenumber object. 
@@ -78,7 +79,7 @@ class Gaussian(Filter):
 #-----------------------------------------------------------------------
 class Helmholtz(Filter):
     """
-    Class for the Helmholtz filter.
+    Class for the Helmholtz filter: ^G(k)=2/(kL)sin(kL/2)
 
     Attributes: 
         wavenumber (Wavenumber): the wavenumber object. 
@@ -108,7 +109,7 @@ class Helmholtz(Filter):
 #-----------------------------------------------------------------------
 class Implicit(Filter):
     """
-    Class for a 3-point implicit filter.
+    Class for a 3-point implicit filter: ^G(k)=(0.5+a)(1+cos(kh))/(1+2acos(kh))
 
     Attributes: 
         wavenumber (Wavenumber): the wavenumber object. 
@@ -188,16 +189,27 @@ class Box(Filter):
     def __buildTransferFunction(self):
         tFunc=[]
         for k in self._k:
-            hg=2.0e0/(k*self._param)*np.sin(k/2.0e0*self._param)
+            if k!=0.0e0:
+                hg=2.0e0/(k*self._param)*np.sin(k*self._param/2.0e0)
+            else:
+                hg=1.0e0
             tFunc.append(hg)
         return tFunc
 
-    def getCutOff(self): pass #TODO
+    def getCutOff(self): return fsolve(self.funcForCutOff, 0.0)
+
+    def funcForCutOff(self, x): return np.sin(x*self._param/2.0e0)-x/4.0e0*self._param
+
+    @staticmethod 
+    def getParamForBoxFilterCutOff(kc): return fsolve(Box.funcForBoxFilterParam, np.pi, args=kc)
+
+    @staticmethod
+    def funcForBoxFilterParam(x, kc): return np.sin(kc*x/2.0e0)-kc/4.0e0*x
 
 #-----------------------------------------------------------------------
 class Butterworth(Filter):
     """
-    Class for Butterworth filter: G(k)=1/sqrt(1+(k/kc)**2n)
+    Class for Butterworth filter: ^G(k)=1/sqrt(1+(k/kc)**2n)
 
     Attributes: 
         wavenumber (Wavenumber): the wavenumber object. 
