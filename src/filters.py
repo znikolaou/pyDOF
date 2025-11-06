@@ -3,7 +3,7 @@ from utils import *
 #-----------------------------------------------------------------------
 class Filter(Log, Const):
     """
-    Parent class for representing continuous filters. 
+    Base class for representing continuous filters. 
 
     *Any new filter should inherit Filter! 
 
@@ -164,5 +164,65 @@ class SharpCutOff(Filter):
         return tFunc
 
     def getCutOff(self): return self._param
+#-----------------------------------------------------------------------
+class Box(Filter):
+    """
+    Class for Box filter: ^G(kh)=2/(kh L/h)sin(kh (L/h)/2)
+
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        param (double): L/h the region over which G(x)=1/L. 
+
+    Author: Z. Nikolaou
+    """
+    def __init__(self, wavenumber, param):
+        self._k=wavenumber.get()
+        self._param=param
+        self._tFunc=self.__buildTransferFunction()
+        Filter.__init__(self, self._k, self._tFunc)
+
+    def name(self): return "Box"
+
+    def getNominalStencil(self): return int(self._param)+1
+
+    def __buildTransferFunction(self):
+        tFunc=[]
+        for k in self._k:
+            hg=2.0e0/(k*self._param)*np.sin(k/2.0e0*self._param)
+            tFunc.append(hg)
+        return tFunc
+
+    def getCutOff(self): pass #TODO
+
+#-----------------------------------------------------------------------
+class Butterworth(Filter):
+    """
+    Class for Butterworth filter: G(k)=1/sqrt(1+(k/kc)**2n)
+
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        paramN  (double)
+        paramKc (double)
+
+    Author: Z. Nikolaou
+    """
+    def __init__(self, wavenumber, paramKc, paramN):
+        self._k=wavenumber.get()
+        self._paramN=paramN
+        self._paramKc=paramKc
+        self._tFunc=self.__buildTransferFunction()
+        Filter.__init__(self, self._k, self._tFunc)
+
+    def name(self): return "Butterworth"
+
+    def __buildTransferFunction(self):
+        tFunc=[]
+        exp=2.0e0*self._paramN
+        for k in self._k:
+            hg=1.0e0/np.sqrt(1.0e0+3.0e0*(k/self._paramKc)**exp)
+            tFunc.append(hg)
+        return tFunc
+
+    def getCutOff(self): return self._paramKc
 #-----------------------------------------------------------------------
 
