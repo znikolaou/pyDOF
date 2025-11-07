@@ -46,6 +46,10 @@ class Filter(Log, Const):
 
     @abstractmethod
     def getNominalStencil(self): pass
+
+    @abstractmethod
+    def get(self): pass
+
 #-----------------------------------------------------------------------
 class Gaussian(Filter):
     """
@@ -142,7 +146,7 @@ class SharpCutOff(Filter):
 
     Attributes: 
         wavenumber (Wavenumber): the wavenumber object. 
-        param (double): filter cut-off wavenumber (kh). 
+        param (double): filter cut-off wavenumber (kch). 
 
     Author: Z. Nikolaou
     """
@@ -165,6 +169,16 @@ class SharpCutOff(Filter):
         return tFunc
 
     def getCutOff(self): return self._param
+
+    def get(self, x):
+        n=len(x)
+        g=np.zeros(n)
+        for i in range(n):
+            if x[i] != 0.0e0:
+                g[i]=1.0e0/np.pi*np.sin(self._param*x[i])/x[i]
+            else:
+                x[i]=self._param/np.pi
+        return g
 #-----------------------------------------------------------------------
 class Box(Filter):
     """
