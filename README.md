@@ -1,4 +1,6 @@
 # pyDof
+
+![title](figs/logoImage.png) 
    
 **pyDof**, is a library for computing optimised coefficients for discrete forward and inverse filters according to the methodology
 developed in [1, 2]. 
