@@ -20,8 +20,8 @@ iopt.run()
 
 vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
 
-#out=Output("./output/", "coeffs", flt, dflt, recTfunc, vdflt)
-#out.write()
+out=Output(flt, dflt, recTfunc, vdflt)
+out.write()
 
 k=wavenumber.get()
 plt.plot(k, flt.getTransferFunction(), 'ko', label="$G$")

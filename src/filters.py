@@ -234,8 +234,7 @@ class Butterworth(Filter):
     """
     def __init__(self, wavenumber, paramKc, paramN):
         self._k=wavenumber.get()
-        self._paramN=paramN
-        self._paramKc=paramKc
+        self._param=[paramKc, paramN]
         self._tFunc=self.__buildTransferFunction()
         Filter.__init__(self, self._k, self._tFunc)
 
@@ -243,12 +242,12 @@ class Butterworth(Filter):
 
     def __buildTransferFunction(self):
         tFunc=[]
-        exp=2.0e0*self._paramN
+        exp=2.0e0*self._param[1]
         for k in self._k:
-            hg=1.0e0/np.sqrt(1.0e0+3.0e0*(k/self._paramKc)**exp)
+            hg=1.0e0/np.sqrt(1.0e0+3.0e0*(k/self._param[0])**exp)
             tFunc.append(hg)
         return tFunc
 
-    def getCutOff(self): return self._paramKc
+    def getCutOff(self): return self._param[0]
 #-----------------------------------------------------------------------
 

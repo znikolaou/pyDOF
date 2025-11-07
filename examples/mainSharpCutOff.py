@@ -11,10 +11,10 @@ wavenumber=Wavenumber()
 flt=SharpCutOff(wavenumber, np.pi/2.0)
 dflt=DiscreteFilter(wavenumber, nStencil=33)
 
-opt=Optimiser(flt, dflt, isPositive=False, isMonotonic=True, isAdaptive=True, optError=1.0E-2)
+opt=Optimiser(flt, dflt, isPositive=False, isMonotonic=True, isAdaptive=True, optError=1.0E-1)
 opt.run()
 
-out=Output("./output/", "coeffs", flt, dflt)
+out=Output(flt, dflt)
 out.write()
 
 plt.plot(wavenumber.get(), flt.getTransferFunction(), 'ko', label="$G$")
