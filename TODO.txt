@@ -1,0 +1,3 @@
+1. Fix output to file for 2-parameter Butterworth filter.
+2. Check global optimiser. 
+3. Reformat and clean throughout. 

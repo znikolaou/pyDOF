@@ -4,6 +4,7 @@ from discreteFilter import *
 from errors import *
 import matplotlib.pyplot as plt
 from reconstructedTransferFunction import *
+import scipy
 #-----------------------------------------------------------------------
 class ObjectiveFunction(Errors):
     """
@@ -39,6 +40,7 @@ class ObjectiveFunction(Errors):
             #plt.show()
         else:
             self._lastSolution= self._dfilter.getTransferFunction(coeffs)
+            #print('x=', coeffs)
             
         self._lastError=self.msqe(self._targetTfunc, self._lastSolution)
         self._gradError=np.mean(np.abs(np.gradient(self._targetTfunc)- \
