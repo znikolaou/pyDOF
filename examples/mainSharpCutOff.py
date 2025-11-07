@@ -9,7 +9,7 @@ from output import *
 wavenumber=Wavenumber()
 
 flt=SharpCutOff(wavenumber, np.pi/2.0)
-dflt=DiscreteFilter(wavenumber, nStencil=11)
+dflt=DiscreteFilter(wavenumber, nStencil=33)
 
 opt=Optimiser(flt, dflt, isPositive=False, isMonotonic=True, isAdaptive=True, optError=1.0E-2)
 opt.run()
