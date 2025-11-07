@@ -16,7 +16,6 @@ class Const:
     NK_NOMINAL=400
     DIVERGENCE_FACTOR=1.10
     TOL_NYQDAMP=0.1
-    MAX_ITERATIONS=500
     #
     NUM_FORMAT_SHORT="{:.8e}.".format
     NUM_FORMAT_LONG="{:.16e}".format
