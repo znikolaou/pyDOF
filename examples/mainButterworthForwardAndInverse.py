@@ -7,15 +7,15 @@ from optimiser import *
 from output import * 
 
 wavenumber=Wavenumber()
-flt=Butterworth(wavenumber, np.pi/2.0, 6.0)
+flt=Butterworth(wavenumber, np.pi/2.0, 8.0)
 
-dflt=DiscreteFilter(wavenumber, nStencil=31)
-opt=Optimiser(flt, dflt, isZeroDampingAtPi=False, isMonotonic=True, isAdaptive=False)
+dflt=DiscreteFilter(wavenumber)
+opt=Optimiser(flt, dflt, optError=1.0e-4)
 opt.run()
 
 recTfunc=ReconstructedTransferFunction(dflt, nVanCittert=50)
-vdflt=DiscreteFilter(wavenumber, isForward=False, nStencil=31)
-iopt=Optimiser(recTfunc, vdflt, isMonotonic=True, isAdaptive=False)
+vdflt=DiscreteFilter(wavenumber, isForward=False, nStencil=dflt.getNs())
+iopt=Optimiser(recTfunc, vdflt, optError=1.0e-3)
 iopt.run()
 
 vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()

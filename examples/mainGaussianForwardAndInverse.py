@@ -21,7 +21,7 @@ iopt.run()
 
 vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
 
-out=Output("./output/", "coeffs", flt, dflt, recTfunc, vdflt)
+out=Output(flt, dflt, recTfunc, vdflt)
 out.write()
 
 k=wavenumber.get()

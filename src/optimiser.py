@@ -28,7 +28,7 @@ class Optimiser(Const, Log):
     Author: Z. Nikolaou.
     """
     def __init__(self, target, discreteFilter, method="SLSQP",  \
-            isZeroDampingAtPi=True, isPositive=True, isMonotonic=False, isAdaptive=True, \
+            isZeroDampingAtPi=False, isPositive=True, isMonotonic=True, isAdaptive=True, \
             lamda=0.e0, optError=1.0e-6, maxIterations=100): 
         Log.__init__(self, type(self).__name__) 
         self._target=target

@@ -78,8 +78,7 @@ class Gaussian(Filter):
             tFunc.append(hg)
         return tFunc
 
-    def getCutOff(self):
-        return math.sqrt(24.0*math.log(Const.TWO))/self._param
+    def getCutOff(self): return np.sqrt(24.0*np.log(Const.TWO))/self._param
 #-----------------------------------------------------------------------
 class Helmholtz(Filter):
     """
@@ -227,8 +226,8 @@ class Butterworth(Filter):
 
     Attributes: 
         wavenumber (Wavenumber): the wavenumber object. 
-        paramN  (double)
-        paramKc (double)
+        paramN  (double) : sharpness 
+        paramKc (double) : cut-off wavenumber
 
     Author: Z. Nikolaou
     """
@@ -245,6 +244,36 @@ class Butterworth(Filter):
         exp=2.0e0*self._param[1]
         for k in self._k:
             hg=1.0e0/np.sqrt(1.0e0+3.0e0*(k/self._param[0])**exp)
+            tFunc.append(hg)
+        return tFunc
+
+    def getCutOff(self): return self._param[0]
+#-----------------------------------------------------------------------
+class ErrorFunction(Filter):
+    """
+    Class for error-function-based filter: ^G(k)=0.5*(1-erf((kh-kch)sqrt(pi)/a))
+
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        paramA  (double): sharpnesss
+        paramKc (double): cut-off wavenumber
+
+    Author: Z. Nikolaou
+    """
+    def __init__(self, wavenumber, paramKc, paramA):
+        self._k=wavenumber.get()
+        self._param=[paramKc, paramA]
+        self._tFunc=self.__buildTransferFunction()
+        Filter.__init__(self, self._k, self._tFunc)
+
+    def name(self): return "Error-function"
+
+    def __buildTransferFunction(self):
+        tFunc=[]
+        exp=2.0e0*self._param[1]
+        for k in self._k:
+            arg=(k-self._param[0])*np.sqrt(np.pi)/self._param[1]
+            hg=0.5e0*(1.0e0-math.erf(arg))
             tFunc.append(hg)
         return tFunc
 

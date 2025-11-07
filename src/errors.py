@@ -1,4 +1,3 @@
-from constants import *
 #-----------------------------------------------------------------------
 class Errors:
     """
@@ -6,6 +5,7 @@ class Errors:
 
     Author: Z. Nikolaou
     """
+
     @staticmethod
     def msqe(a, b): return np.square(np.subtract(a, b)).mean()
 
