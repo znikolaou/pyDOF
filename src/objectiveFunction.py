@@ -2,9 +2,7 @@ from utils import *
 from filters import *
 from discreteFilter import *
 from errors import *
-import matplotlib.pyplot as plt
 from reconstructedTransferFunction import *
-import scipy
 #-----------------------------------------------------------------------
 class ObjectiveFunction(Errors):
     """
@@ -12,14 +10,13 @@ class ObjectiveFunction(Errors):
 
     Attributes: 
         target (Filter or ReconstructedTransferFunction): Target. 
-        discreteFilter (DiscreteFilter): The discrete filter object
-                                           whose coeffs must be found
-                                           by solving the optimisation
-                                           problem.
+        discreteFilter (DiscreteFilter): 
+            The discrete filter object whose coeffs must be found.
         lamda (double): regularisation/smoothness parameter. 
 
     Author: Z. Nikolaou.
     """ 
+
     def __init__(self, target, discreteFilter, lamda=0.0e0):
         self._target=target
         self._dfilter=discreteFilter
@@ -33,18 +30,12 @@ class ObjectiveFunction(Errors):
         self._counter+=1
         if(isinstance(self._target, ReconstructedTransferFunction)):
             self._lastSolution=self._target.getVQTransferFunction(coeffs)
-            #print("INVERSE")
-            #print(coeffs)
-            #plt.plot(self._dfilter.getTransferFunction(coeffs))
-            #plt.plot(self._lastSolution)
-            #plt.show()
         else:
             self._lastSolution= self._dfilter.getTransferFunction(coeffs)
-            #print('x=', coeffs)
-            
+           
         self._lastError=self.msqe(self._targetTfunc, self._lastSolution)
-        self._gradError=np.mean(np.abs(np.gradient(self._targetTfunc)- \
-                                np.gradient(self._lastSolution)))
+        self._gradError=\
+                np.mean(np.abs(np.gradient(self._targetTfunc)-np.gradient(self._lastSolution)))
 
         self._lastError=self._lastError+self._lamda*self._gradError
 
