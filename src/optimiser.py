@@ -1,6 +1,8 @@
 from libs import *
 from objectiveFunction import *
 from reconstructedTransferFunction import *
+from scipy.optimize import Bounds
+from scipy.optimize import shgo
 #-----------------------------------------------------------------------
 class Optimiser(Const, Log):
     """
@@ -20,14 +22,14 @@ class Optimiser(Const, Log):
             \hat{G}(k) > 0 for all k in [0, pi). 
         isAdaptive (boolean): True, False. If true, the discrete filter 
             stencil size will increase until the target optimisation error 
-            Const.TOL_OPTIMISER is reached.
+            self._optError is reached.
         lamda (float): regularisation/smoothness parameter.
 
     Author: Z. Nikolaou.
     """
     def __init__(self, target, discreteFilter, method="SLSQP",  \
             isZeroDampingAtPi=True, isPositive=True, isMonotonic=False, isAdaptive=True, \
-            lamda=0.e0): 
+            lamda=0.e0, optError=1.0e-6): 
         Log.__init__(self, type(self).__name__) 
         self._target=target
         self._dfilter=discreteFilter
@@ -37,6 +39,7 @@ class Optimiser(Const, Log):
         self._isMonotonic=isMonotonic
         self._isAdaptive=isAdaptive
         self._lamda=lamda
+        self._optError=optError
         self._objFunc=ObjectiveFunction(self._target, self._dfilter, lamda=self._lamda)
         self._nk=self._dfilter.getNk()
         self._isInverse=not self._dfilter.isForward()
@@ -62,13 +65,17 @@ class Optimiser(Const, Log):
         return nv
 
     def __getUnConstrainedSolution(self, xo): 
-        #solution=minimize(self._objFunc.get, xo, method=self._uncMethod)
-        solution=minimize(self._objFunc.get, xo, method='BFGS')
+        solution=minimize(self._objFunc.get, xo, method=self._uncMethod)
         return solution
 
     def __getConstrainedSolution(self, xo, constraintsList):
-        solution=minimize(self._objFunc.get, xo, method=self._method, \
-                constraints=constraintsList)
+        solution=minimize(self._objFunc.get, xo, method=self._method, constraints=constraintsList) 
+        return solution
+
+    def __getConstrainedSolutionGlobal(self, nmp1, constraintsList):
+        solution=shgo(self._objFunc.get, bounds=self.__getBounds(nmp1), constraints=constraintsList) 
+        print(solution)
+        exit()
         return solution
 
     def run(self): 
@@ -81,21 +88,6 @@ class Optimiser(Const, Log):
         if self._isAdaptive: maxIter=Const.MAX_ITERATIONS
         for i in range(maxIter):
             x=self.__getInitialGuessForThreePointForward(nmp1)
-            if(self._isInverse): 
-                pass
-                #0
-                #x=self.__getInitialGuess(nmp1)
-                #x=self.__getInitialGuessForThreePointForward(nmp1)
-                #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuess(nmp1))
-                #x=solUnc.x 
-                #1 slightly better
-                #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForThreePointForward(nmp1))
-                #x=solUnc.x
-                #2 slightly best
-                #solUnc=self.__getUnConstrainedSolution(self.__getInitialGuessForThreePointInverse(nmp1, self._nVanCittert))
-                #x=solUnc.x
-                #x=self.__getInitialGuessForThreePointInverse(nmp1, self._nVanCittert)
-                  
             self._solution=self.__getConstrainedSolution(x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
             self.__printIterInfo(itr, nmp1, self._error) 
@@ -117,14 +109,14 @@ class Optimiser(Const, Log):
         if isConverged:
             print('\n*Success: converged at iteration ', itr, 'error=', self._error)
         else:
-            print('\n*Failure to converge for tolerance=', Const.TOL_OPTIMISER)
+            print('\n*Failure to converge for tolerance=', self._optError)
             print('\tOptimisation error attained=', self._error)
 
         self._dfilter.setCoeffs(self.get())
         self._dfilter.setOptError(self._error)
                
     def __isConverged(self, error):
-        if error<=Const.TOL_OPTIMISER: return True
+        if error<=self._optError: return True
         else: return False
     
     def __isDiverging(self, itr, error, errorOld):
@@ -143,7 +135,15 @@ class Optimiser(Const, Log):
     def __printIterInfo(self, itr, nmp1, error):
         print("Iteration=", itr, "stencil size (nm+1)=", nmp1, \
                         "error=", error)
-    
+   
+    def __getBounds(self, nmp1):
+        bLow=[]
+        bHigh=[]
+        for i in range(nmp1): 
+            bLow.append(-1.0e3)
+            bHigh.append(1.0e3)
+        return Bounds(bLow, bHigh)
+
     def __getInitialGuessForThreePointForward(self, nmp1):
         xo=np.zeros(nmp1)
         xo[0]=Const.HALF

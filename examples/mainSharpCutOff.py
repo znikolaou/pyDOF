@@ -9,9 +9,9 @@ from output import *
 wavenumber=Wavenumber()
 
 flt=SharpCutOff(wavenumber, np.pi/2.0)
-dflt=DiscreteFilter(wavenumber,nStencil=31)
+dflt=DiscreteFilter(wavenumber, nStencil=11)
 
-opt=Optimiser(flt, dflt, isMonotonic=False, isAdaptive=False)
+opt=Optimiser(flt, dflt, isPositive=False, isMonotonic=True, isAdaptive=True, optError=1.0E-2)
 opt.run()
 
 out=Output("./output/", "coeffs", flt, dflt)

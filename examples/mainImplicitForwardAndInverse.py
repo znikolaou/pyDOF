@@ -7,7 +7,8 @@ from optimiser import *
 from output import * 
 
 wavenumber=Wavenumber()
-flt=Implicit(wavenumber, -0.262)
+#flt=Implicit(wavenumber, -0.262)
+flt=Implicit(wavenumber, -0.40)
 dflt=DiscreteFilter(wavenumber)
 
 opt=Optimiser(flt, dflt, isAdaptive=True)
@@ -15,8 +16,8 @@ opt.run()
 ns=dflt.getNs()
 
 recTfunc=ReconstructedTransferFunction(dflt, flt, nVanCittert=100)
-vdflt=DiscreteFilter(wavenumber, isForward=False)
-iopt=Optimiser(recTfunc, vdflt, isMonotonic=True, isAdaptive=True)
+vdflt=DiscreteFilter(wavenumber, nStencil=ns*2+1, isForward=False)
+iopt=Optimiser(recTfunc, vdflt, isMonotonic=True, isAdaptive=False)
 iopt.run()
 
 vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
