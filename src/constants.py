@@ -13,7 +13,7 @@ class Const:
     ONE=1.0e0
     TWO=2.0e0
     PI=np.pi
-    NK_NOMINAL=400
+    NK_NOMINAL=600
     DIVERGENCE_FACTOR=1.10
     TOL_NYQDAMP=0.1
     #
