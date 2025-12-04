@@ -1,38 +1,29 @@
 from include import *
-from utils import *
-from discreteFilter import *
-from filters import *
-from objectiveFunction import *
-from optimiser import *
-from output import * 
 
 wavenumber=Wavenumber()
-#flt=Implicit(wavenumber, -0.262)
-flt=Implicit(wavenumber, -0.40)
-dflt=DiscreteFilter(wavenumber)
 
+flt=Implicit(wavenumber, -0.262)
+dflt=DiscreteFilter(wavenumber)
 opt=Optimiser(flt, dflt, isAdaptive=True)
 opt.run()
-ns=dflt.getNs()
 
-recTfunc=ReconstructedTransferFunction(dflt, flt, nVanCittert=100)
-vdflt=DiscreteFilter(wavenumber, nStencil=ns*2+1, isForward=False)
-iopt=Optimiser(recTfunc, vdflt, isMonotonic=True, isAdaptive=False)
+recTfunc=ReconstructedTransferFunction(dflt, flt, nVanCittert=300)
+vdflt=DiscreteFilter(wavenumber, isForward=False)
+iopt=Optimiser(recTfunc, vdflt, isAdaptive=True, optError=1.0e-5)
 iopt.run()
 
 vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
 
-out=Output("./output/", "coeffs", flt, dflt, recTfunc, vdflt)
+out=Output(flt, dflt, recTfunc, vdflt)
 out.write()
 
 k=wavenumber.get()
-plt.plot(k, flt.getTransferFunction(), 'ko', label="$G$")
-plt.plot(k, dflt.getTransferFunction(), label="$G_d$")
-plt.plot(k, recTfunc.getTransferFunction(), 'ro', label="${Q_d}^N$")
-plt.plot(k, vgTfunc, label="$V_dG_d$")
-plt.legend()
-plt.grid('on')
+plt.plot(k, flt.getTransferFunction(), 'ko', mfc="None", label="$\hat{G}$")
+plt.plot(k, dflt.getTransferFunction(), 'r', label="$\hat{G}_d$")
+plt.plot(k, recTfunc.getTransferFunction(), 'bd', mfc="None", label="${\hat{Q}_d}^N$")
+plt.plot(k, vgTfunc, 'm', label="$\hat{V}_d\hat{G}_d$")
+plt.plot(k, vdflt.getTransferFunction()/np.max(vdflt.getTransferFunction()), 'g', label="$\hat{V}_d+$")
 plt.xlabel('$kh$')
+plt.legend(frameon=False)
+plt.grid('on')
 plt.show()
-
-
