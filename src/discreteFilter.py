@@ -51,7 +51,7 @@ class DiscreteFilter(Log, Const):
 
     def getNm(self): return int((self._ns-1)/2)
 
-    def getNmPlusOne(self): return self.getNm()+1
+    def getNmPlusOne(self): return self.getNm()+1 
 
     def getNs(self): return self._ns
 

@@ -20,6 +20,7 @@ class ObjectiveFunction(Errors):
     def __init__(self, target, discreteFilter, lamda=0.0e0):
         self._target=target
         self._dfilter=discreteFilter
+        self._k=self._dfilter.getK()
         self._targetTfunc=self._target.getTransferFunction() 
         self._counter=0
         self._lastError=None
@@ -33,9 +34,8 @@ class ObjectiveFunction(Errors):
         else:
             self._lastSolution= self._dfilter.getTransferFunction(coeffs)
            
-        self._lastError=self.msqe(self._targetTfunc, self._lastSolution)
-        self._gradError=\
-                np.mean(np.abs(np.gradient(self._targetTfunc)-np.gradient(self._lastSolution)))
+        self._lastError=self.msqe(self._targetTfunc, self._lastSolution)                
+        self._gradError=np.mean(np.abs(np.gradient(self._targetTfunc)-np.gradient(self._lastSolution)))
 
         self._lastError=self._lastError+self._lamda*self._gradError
 
