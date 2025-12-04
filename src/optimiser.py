@@ -16,10 +16,10 @@ class Optimiser(Const, Log):
         method (string): the optimiser method to use for constrained 
             optimisation. Suggested candidates are  "SLSQP", and 
             "trust-constr". 
-        isZeroDampingAtPi (boolean): True, False. If true, then 
+        isFullDampingAtPi (boolean): True, False. If true, then 
             \hat{G}(pi)=0 always. 
-        isPositive (boolean): True, False. If true, then 
-            \hat{G}(k) > 0 for all k in [0, pi). 
+        isZeroToOne (boolean): True, False. If true, then 
+            0 < \hat{G}(k) < 1 for all k in (0, pi). 
         isAdaptive (boolean): True, False. If true, the discrete filter 
             stencil size will increase until the target optimisation error 
             self._optError is reached.
@@ -28,14 +28,15 @@ class Optimiser(Const, Log):
     Author: Z. Nikolaou.
     """
     def __init__(self, target, discreteFilter, method="SLSQP",  \
-            isZeroDampingAtPi=False, isPositive=True, isMonotonic=True, isAdaptive=True, \
+            isNoDampingAtZero=True, isFullDampingAtPi=True, isZeroToOne=True, isMonotonic=True, isAdaptive=True, \
             lamda=0.e0, optError=1.0e-6, maxIterations=100): 
         Log.__init__(self, type(self).__name__) 
         self._target=target
         self._dfilter=discreteFilter
         self._method=method
-        self._isZeroDampingAtPi=isZeroDampingAtPi
-        self._isPositive=isPositive
+        self._isNoDampingAtZero=isNoDampingAtZero
+        self._isFullDampingAtPi=isFullDampingAtPi
+        self._isZeroToOne=isZeroToOne
         self._isMonotonic=isMonotonic
         self._isAdaptive=isAdaptive
         self._lamda=lamda
@@ -107,12 +108,8 @@ class Optimiser(Const, Log):
         self._dfilter.setCoeffs(self.get())
         self._dfilter.setOptError(self._error)
                
-    def __isConverged(self, error):
-        if error<=self._optError: 
-            return True
-        else: 
-            return False
-    
+    def __isConverged(self, error): return error<=self._optError
+          
     def __isDiverging(self, itr, error, errorOld):
         if itr>1:
             if error>Const.DIVERGENCE_FACTOR*errorOld:
@@ -176,7 +173,7 @@ class Optimiser(Const, Log):
     def __getConstraintZeroToOne(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk-1, :], Const.ZERO, Const.ONE)
 
-    def __getConstraintZeroDampingAtPi(self, matrixA):
+    def __getConstraintFullDampingAtPi(self, matrixA):
         return LinearConstraint(matrixA[self._nk-1, :], Const.ZERO, Const.ZERO)
 
     def __getConstraintBetweenOneAndNPlusOne(self, matrixA):
@@ -186,14 +183,14 @@ class Optimiser(Const, Log):
         A=self.__getConstraintMatrixA(nmp1)
         D=self.__getConstraintMatrixD(nmp1)
         constraintsList=[]
-        constraintsList.append(self.__getConstraintConsistency(A))
+        if(self._isNoDampingAtZero): constraintsList.append(self.__getConstraintConsistency(A))
         if(self._isInverse):
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
             if(self._isMonotonic): constraintsList.append(self.__getConstraintMonotonicNeg(D))
         else:
             if(self._isMonotonic): constraintsList.append(self.__getConstraintMonotonicPos(D))
-            if(self._isPositive): constraintsList.append(self.__getConstraintZeroToOne(A))
-            if(self._isZeroDampingAtPi): constraintsList.append(self.__getConstraintZeroDampingAtPi(A))
+            if(self._isZeroToOne): constraintsList.append(self.__getConstraintZeroToOne(A))
+            if(self._isFullDampingAtPi): constraintsList.append(self.__getConstraintFullDampingAtPi(A))
         return constraintsList
 
   
