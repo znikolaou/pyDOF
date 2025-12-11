@@ -178,6 +178,9 @@ class SharpCutOff(Filter):
             else:
                 x[i]=self._param/np.pi
         return g
+
+    def getPassBandIndex(self): return self._tFunc.index(0)-1
+      
 #-----------------------------------------------------------------------
 class Box(Filter):
     """
@@ -248,6 +251,25 @@ class Butterworth(Filter):
         return tFunc
 
     def getCutOff(self): return self._param[0]
+#-----------------------------------------------------------------------
+class ButterworthHighPass(Butterworth):
+    """
+    Class for Butterworth high-pass filter: ^G(k)=1.0-1/sqrt(1+(k/kc)**2n)
+
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        paramN  (double) : sharpness 
+        paramKc (double) : cut-off wavenumber
+
+    Author: Z. Nikolaou
+    """
+    def __init__(self, wavenumber, paramKc, paramN):
+        Butterworth.__init__(self, wavenumber, paramKc, paramN)
+        self._k=wavenumber.get()
+        self._tFunc=Const.ONE-self.getTransferFunction()
+        Filter.__init__(self, self._k, self._tFunc)
+
+    def name(self): return "ButterworthHighPass"   
 #-----------------------------------------------------------------------
 class ErrorFunction(Filter):
     """
