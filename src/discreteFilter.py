@@ -38,11 +38,10 @@ class DiscreteFilter(Log, Const):
     def isForward(self): return self._isForward
 
     def getAllCoeffs(self):
-        if self.coeffs!=None:
-            nh=len(self.coeffs)
-            allCoeffs=[]
-            allCoeffs=self.coeffs
-            for i in range(1, nh): allCoeffs.insert(0,coeffs[i])
+        nm=len(self.coeffs)-1
+        allCoeffs=np.zeros(2*nm+1)
+        allCoeffs[nm:2*nm+1]=self.coeffs
+        for i in range(0, nm): allCoeffs[i]=self.coeffs[nm-i]
         return allCoeffs
 
     def getK(self): return self._k
