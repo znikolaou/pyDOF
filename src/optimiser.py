@@ -27,17 +27,22 @@ class Optimiser(Const, Log):
 
     Author: Z. Nikolaou.
     """
-    def __init__(self, target, discreteFilter, method="SLSQP",  \
-            isNoDampingAtZero=True, isFullDampingAtPi=True, isZeroToOne=True, isMonotonic=True, isAdaptive=True, \
-            lamda=0.e0, optError=1.0e-6, maxIterations=100): 
+    def __init__(self, target, discreteFilter, method="SLSQP", lamda=0.e0, optError=1.0e-6, maxIterations=100, \
+            isAdaptive=True, \
+            isNoDampingAtZero=False, isFullDampingAtPi=False, isZeroToOne=False, \
+            isNoDampingAtPi=False, isFullDampingAtZero=False, \
+            isMonotonicNegative=False, isMonotonicPositive=False): 
         Log.__init__(self, type(self).__name__) 
         self._target=target
         self._dfilter=discreteFilter
         self._method=method
         self._isNoDampingAtZero=isNoDampingAtZero
         self._isFullDampingAtPi=isFullDampingAtPi
+        self._isNoDampingAtPi=isNoDampingAtPi
+        self._isFullDampingAtZero=isFullDampingAtZero
         self._isZeroToOne=isZeroToOne
-        self._isMonotonic=isMonotonic
+        self._isMonotonicPositive=isMonotonicPositive
+        self._isMonotonicNegative=isMonotonicNegative
         self._isAdaptive=isAdaptive
         self._lamda=lamda
         self._optError=optError
@@ -164,10 +169,13 @@ class Optimiser(Const, Log):
     def __getConstraintConsistency(self, matrixA):
         return LinearConstraint(matrixA[0, :], Const.ONE, Const.ONE)
 
-    def __getConstraintMonotonicPos(self, matrixD):
-        return LinearConstraint(matrixD[:, :], Const.ZERO, np.inf)
+    def __getConstraintConsistencyAtPi(self, matrixA):
+        return LinearConstraint(matrixA[self._nk-1, :], Const.ONE, Const.ONE)
 
     def __getConstraintMonotonicNeg(self, matrixD):
+        return LinearConstraint(matrixD[:, :], Const.ZERO, np.inf)
+
+    def __getConstraintMonotonicPos(self, matrixD):
         return LinearConstraint(matrixD[:, :], -np.inf, Const.ZERO)
 
     def __getConstraintZeroToOne(self, matrixA):
@@ -175,6 +183,9 @@ class Optimiser(Const, Log):
 
     def __getConstraintFullDampingAtPi(self, matrixA):
         return LinearConstraint(matrixA[self._nk-1, :], Const.ZERO, Const.ZERO)
+
+    def __getConstraintFullDampingAtZero(self, matrixA):
+        return LinearConstraint(matrixA[0, :], Const.ZERO, Const.ZERO)
 
     def __getConstraintBetweenOneAndNPlusOne(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk-1, :], Const.ONE, self._nVanCittert+1)
@@ -184,13 +195,16 @@ class Optimiser(Const, Log):
         D=self.__getConstraintMatrixD(nmp1)
         constraintsList=[]
         if(self._isNoDampingAtZero): constraintsList.append(self.__getConstraintConsistency(A))
-        if(self._isInverse):
+        if(self._isFullDampingAtZero): constraintsList.append(self.__getConstraintFullDampingAtZero(A))
+        if(self._isFullDampingAtPi): constraintsList.append(self.__getConstraintFullDampingAtPi(A))
+        if(self._isNoDampingAtPi): constraintsList.append(self.__getConstraintConsistencyAtPi(A))
+        if(self._isMonotonicPositive): constraintsList.append(self.__getConstraintMonotonicPos(D))
+        if(self._isMonotonicNegative): constraintsList.append(self.__getConstraintMonotonicNeg(D))
+        if(self._isInverse): 
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
-            if(self._isMonotonic): constraintsList.append(self.__getConstraintMonotonicNeg(D))
         else:
-            if(self._isMonotonic): constraintsList.append(self.__getConstraintMonotonicPos(D))
             if(self._isZeroToOne): constraintsList.append(self.__getConstraintZeroToOne(A))
-            if(self._isFullDampingAtPi): constraintsList.append(self.__getConstraintFullDampingAtPi(A))
+
         return constraintsList
 
   
