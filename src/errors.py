@@ -25,12 +25,26 @@ class Errors:
         return 1.0/l*np.trapz(np.square(np.subtract(a, b)), x)
 
     @staticmethod
-    def mperc(a, bTarget):
+    def aperce(a, bTarget):
         n=len(a)
-        e=0.0e0
+        nc=0
+        e=np.zeros(n)
         for i in range(n):
-            if(b[i]!=0.0e0): e=e+100.0*(a[i]-b[i])/b[i]
-        return e
+            if(bTarget[i]!=0.0e0): 
+                nc=nc+1
+                e[i]=100.0*abs((a[i]-bTarget[i])/bTarget[i])
+        return nc, e
+
+    @staticmethod
+    def maperc(a, bTarget):
+        nc, aperce=Errors.aperce(a, bTarget)
+        return np.sum(aperce)/nc
+
+    @staticmethod
+    def maxAbsPerc(a, bTarget):
+        nc, aperce=Errors.aperce(a, bTarget)
+        print(aperce)
+        return [np.argmax(aperce), np.max(aperce)]
 
     @staticmethod
     def maxOvershoot(a): return (np.max(a)-1.e0)*100.0
