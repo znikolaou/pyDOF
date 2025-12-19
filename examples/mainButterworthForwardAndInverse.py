@@ -1,36 +1,30 @@
 from include import *
-from utils import *
-from discreteFilter import *
-from filters import *
-from objectiveFunction import *
-from optimiser import *
-from output import * 
+
+nVanCit=5
 
 wavenumber=Wavenumber()
-flt=Butterworth(wavenumber, 1.01967, 6.0)
+errors=Errors()
 
-dflt=DiscreteFilter(wavenumber, nStencil=55)
-opt=Optimiser(flt, dflt, isFullDampingAtPi=False, optError=1.0e-6)
+flt=Butterworth(wavenumber, 1.01967, 4)
+dflt=DiscreteFilter(wavenumber, nStencil=31)
+opt=Optimiser(flt, dflt, isNoDampingAtZero=True, isZeroToOne=True, isMonotonicNegative=True)
 opt.run()
+percErrorF=errors.maperc(dflt.getTransferFunction(), flt.getTransferFunction())
+print("Forward filter mean abs perc error=", percErrorF)
 
-recTfunc=ReconstructedTransferFunction(dflt, nVanCittert=300)
-vdflt=DiscreteFilter(wavenumber, isForward=False, nStencil=89)
-iopt=Optimiser(recTfunc, vdflt, isFullDampingAtPi=False, isNoDampingAtZero=False, isAdaptive=False, lamda=5.0)
+recTfunc=ReconstructedTransferFunction(dflt, nVanCittert=nVanCit)
+vdflt=DiscreteFilter(wavenumber, isForward=False)
+iopt=Optimiser(recTfunc, vdflt, optError=1.0e-5, isNoDampingAtZero=True, isMonotonicPositive=True)
 iopt.run()
 
 vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
+maxOverShootPerc=errors.maxOvershoot(vgTfunc)
+percErrorI=errors.maperc(vgTfunc, recTfunc.getTransferFunction())
+print("Inverse filter mean abs perc error=", percErrorI)
+print("Max over shoot % (reconstructed)=", maxOverShootPerc)
 
 out=Output(flt, dflt, recTfunc, vdflt)
 out.write()
 
-k=wavenumber.get()
-plt.plot(k, flt.getTransferFunction(), 'ko', mfc="None", label="$\hat{G}$")
-plt.plot(k, dflt.getTransferFunction(), 'r', label="$\hat{G}_d$")
-plt.plot(k, recTfunc.getTransferFunction(), 'bd', mfc="None", label="${\hat{Q}_d}^N$")
-plt.plot(k, vgTfunc, 'm', label="$\hat{V}_d\hat{G}_d$")
-plt.plot(k, vdflt.getTransferFunction()/np.max(vdflt.getTransferFunction()), 'g', label="$\hat{V}_d+$")
-plt.xlabel('$kh$')
-plt.legend(frameon=False)
-plt.grid('on')
-plt.show()
+plotAll(wavenumber.get(), flt, dflt, recTfunc, vdflt, nVanCit)
 

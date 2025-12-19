@@ -43,7 +43,6 @@ class Errors:
     @staticmethod
     def maxAbsPerc(a, bTarget):
         nc, aperce=Errors.aperce(a, bTarget)
-        print(aperce)
         return [np.argmax(aperce), np.max(aperce)]
 
     @staticmethod

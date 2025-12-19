@@ -1,32 +1,30 @@
 from include import *
 
-def getMaxOverShoot(dflt): return 100.0*(np.max(dflt.getTransferFunction())-1.0)
-
-def getMaxPercDiff(flt, dflt, kc):
-    return 100.0*np.max(np.abs(dflt.getTransferFunction()-flt.getTransferFunction())
-
-nsList=[51, 81, 101]
+nsList=[11]
 
 wavenumber=Wavenumber()
 k=wavenumber.get()
 
-flt=SharpCutOff(wavenumber, np.pi/2.0)
+flt=SharpCutOff(wavenumber, np.pi/4.0)
 plt.plot(k, flt.getTransferFunction(), 'ko', mfc="None", label="$\hat{G}$")
-maxVar=[]
+maxPerc=[]
 for v in nsList:
+    m=int((v-1)/2)
     dflt=DiscreteFilter(wavenumber, nStencil=v)
-    #opt=Optimiser(flt, dflt, isAdaptive=False, isMonotonic=False, isZeroToOne=False, isFullDampingAtPi=False, isNoDampingAtZero=False, optError=v)
-    opt=Optimiser(flt, dflt, isAdaptive=False, isMonotonic=True, isNoDampingAtZero=True, optError=v)
+    opt=Optimiser(flt, dflt, isAdaptive=False)
+    #opt=Optimiser(flt, dflt, isAdaptive=False, isNoDampingAtZero=True, isFullDampingAtPi=True, isZeroToOne=True)
+    #opt=Optimiser(flt, dflt, isAdaptive=False, isNoDampingAtZero=True, isFullDampingAtPi=True, isMonotonicNegative=True)
     opt.run()
-    maxVar.append(getMaxOverShoot(dflt))
+    print("Coeffs=",dflt.coeffs)
+    maxPerc.append(getMaxPercDiff(flt, dflt))
     out=Output(flt, dflt)
     out.write()
-    plt.plot(k, dflt.getTransferFunction(), label="$\hat{G}_d, ns=$"+str(v))
+    plt.plot(k, dflt.getTransferFunction(), label="$\hat{G}_d, M=$"+str(m))
 plt.xlabel('$kh$')
-plt.legend(frameon=False)
+plt.legend(frameon=False, loc='center left')
 plt.grid('on')
 plt.xlim(0.0, np.pi)
-plt.ylim(-0.05, 1.1)
+plt.ylim(-0.10, 1.1)
 plt.show()
-print('maxVar=', maxVar)
+print('maxPerc=', maxPerc)
 

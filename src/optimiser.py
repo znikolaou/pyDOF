@@ -189,7 +189,7 @@ class Optimiser(Const, Log):
 
     def __getConstraintBetweenOneAndNPlusOne(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk-1, :], Const.ONE, self._nVanCittert+1)
- 
+    
     def __getConstraintsList(self, nmp1):
         A=self.__getConstraintMatrixA(nmp1)
         D=self.__getConstraintMatrixD(nmp1)
