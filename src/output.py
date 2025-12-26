@@ -46,10 +46,10 @@ class Output(Const):
         else:
             for i in range(nprm): 
                 f.write('\n! Parameter='+Form.short(self._target._param[i]))
-        f.write('\n! k_ch=' \
-                +Form.short(self._target.getCutOff()))
-        f.write('\n! Damping at pi='+ \
-                Form.short(self._target.getNyquistDamping()))
+        #f.write('\n! k_ch=' \
+        #        +Form.short(self._target.getCutOff()))
+        #f.write('\n! Damping at pi='+ \
+        #        Form.short(self._target.getNyquistDamping()))
         f.write('\n! Stencil size='+str(self._dfilter.getNs()))
         f.write('\n! Optimisation error='+ \
                 Form.short(self._dfilter.optError))
