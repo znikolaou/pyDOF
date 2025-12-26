@@ -35,8 +35,8 @@ class ObjectiveFunction(Errors):
             self._lastSolution= self._dfilter.getTransferFunction(coeffs)
            
         self._lastError=self.msqe(self._targetTfunc, self._lastSolution)                
-        self._gradError=np.mean(np.abs(np.gradient(self._targetTfunc)-np.gradient(self._lastSolution)))
-
+        self._gradError=np.mean(np.abs(np.gradient(self._lastSolution)))
+      
         self._lastError=self._lastError+self._lamda*self._gradError
 
         return self._lastError
