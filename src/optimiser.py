@@ -31,7 +31,8 @@ class Optimiser(Const, Log):
             isAdaptive=True, \
             isNoDampingAtZero=False, isFullDampingAtPi=False, isZeroToOne=False, \
             isNoDampingAtPi=False, isFullDampingAtZero=False, \
-            isMonotonicNegative=False, isMonotonicPositive=False): 
+            isMonotonicNegative=False, isMonotonicPositive=False, isPositive=False,
+            isNoDampingAtK=None, isFullDampingAtK=None): 
         Log.__init__(self, type(self).__name__) 
         self._target=target
         self._dfilter=discreteFilter
@@ -43,12 +44,16 @@ class Optimiser(Const, Log):
         self._isZeroToOne=isZeroToOne
         self._isMonotonicPositive=isMonotonicPositive
         self._isMonotonicNegative=isMonotonicNegative
+        self._isPositive=isPositive
+        self._isNoDampingAtK=isNoDampingAtK
+        self._isFullDampingAtK=isFullDampingAtK
         self._isAdaptive=isAdaptive
         self._lamda=lamda
         self._optError=optError
         self._maxIterations=maxIterations
         self._objFunc=ObjectiveFunction(self._target, self._dfilter, lamda=self._lamda)
         self._nk=self._dfilter.getNk()
+        self._k=self._dfilter.getK()
         self._isInverse=not self._dfilter.isForward()
         self._nVanCittert=self.__getNvanCittert()
         self._solution=None
@@ -181,8 +186,19 @@ class Optimiser(Const, Log):
     def __getConstraintZeroToOne(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk-1, :], Const.ZERO, Const.ONE)
 
+    def __getConstraintPositive(self, matrixA):
+        return LinearConstraint(matrixA[1:self._nk-1, :], Const.ZERO, np.inf)
+
     def __getConstraintFullDampingAtPi(self, matrixA):
         return LinearConstraint(matrixA[self._nk-1, :], Const.ZERO, Const.ZERO)
+
+    def __getConstraintNoDampingAtK(self, matrixA, k):
+        i=self._k.searchsorted(k)
+        return LinearConstraint(matrixA[i, :], Const.ONE, Const.ONE)
+
+    def __getConstraintFullDampingAtK(self, matrixA, k):
+        i=self._k.searchsorted(k)
+        return LinearConstraint(matrixA[i, :], Const.ZERO, Const.ZERO)
 
     def __getConstraintFullDampingAtZero(self, matrixA):
         return LinearConstraint(matrixA[0, :], Const.ZERO, Const.ZERO)
@@ -200,10 +216,15 @@ class Optimiser(Const, Log):
         if(self._isNoDampingAtPi): constraintsList.append(self.__getConstraintConsistencyAtPi(A))
         if(self._isMonotonicPositive): constraintsList.append(self.__getConstraintMonotonicPos(D))
         if(self._isMonotonicNegative): constraintsList.append(self.__getConstraintMonotonicNeg(D))
+        if(self._isNoDampingAtK is not None):
+            for k in self._isNoDampingAtK: constraintsList.append(self.__getConstraintNoDampingAtK(A, k))
+        if(self._isFullDampingAtK is not None):
+            for k in self._isFullDampingAtK: constraintsList.append(self.__getConstraintFullDampingAtK(A, k))
         if(self._isInverse): 
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
         else:
             if(self._isZeroToOne): constraintsList.append(self.__getConstraintZeroToOne(A))
+            if(self._isPositive): constraintsList.append(self.__getConstraintPositive(A))
 
         return constraintsList
 

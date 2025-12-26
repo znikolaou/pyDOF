@@ -139,9 +139,42 @@ class Implicit(Filter):
 
     def getCutOff(self): return np.arccos(-Const.TWO*self._param)
 #-----------------------------------------------------------------------
+class SharpWindow(Filter):
+    """
+    Class for a sharp window filter.
+    ^G(k)=1 for kh \in [kcl, kch]. 
+
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object. 
+        kcl (double): filter lower cut-off wavenumber.
+        kch (double): filter higher cut-off wavenumber. 
+
+    Author: Z. Nikolaou
+    """
+ 
+    def __init__(self, wavenumberOb, kcl=0.0e0, kch=np.pi/2.0e0):
+        self._k=wavenumberOb.get()
+        self._param=[kcl, kch]
+        self._tFunc=self.__buildTransferFunction()
+        Filter.__init__(self, self._k, self._tFunc)
+
+    def name(self): return "Sharp window"
+
+    def __buildTransferFunction(self):
+        tFunc=[]
+        for k in self._k:
+            if(k>=self._param[0] and k<=self._param[1]):
+                tFunc.append(Const.ONE)
+            else:
+                tFunc.append(Const.ZERO)
+        return tFunc
+
+    def getCutOff(self): return [self._param[0], self._param[1]]
+      
+#-----------------------------------------------------------------------
 class SharpCutOff(Filter):
     """
-    Class for a shartp cut-off filter.
+    Class for a sharp cut-off filter.
 
     Attributes: 
         wavenumber (Wavenumber): the wavenumber object. 
