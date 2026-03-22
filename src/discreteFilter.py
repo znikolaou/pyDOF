@@ -68,19 +68,16 @@ class DiscreteFilter(Log, Const):
 
     def getTransferFunction(self, halfCoeffs=None, nVanCittert=0):
         if(halfCoeffs is None): halfCoeffs=self.coeffs
-        hg=np.zeros(self._nk)
-        nh=len(halfCoeffs)
-        for i in range(self._nk): 
-            hg[i]=hg[i]+halfCoeffs[0]
-            for j in range(1, nh):
-                hg[i]=hg[i]+Const.TWO*halfCoeffs[j]*np.cos(j*self._k[i])
-
-        return self.__getReconstructedTransferFunction(hg,nVanCittert)
+        hg=np.ones(self._nk)*halfCoeffs[0]
+        for i in range(self._nk):
+            res=Const.ZERO
+            for j in range(1, len(halfCoeffs)):
+                res+=halfCoeffs[j]*np.cos(j*self._k[i])
+            hg[i]=hg[i]+Const.TWO*res
+        return self.__getReconstructedTransferFunction(hg, nVanCittert)
 
     def __getReconstructedTransferFunction(self, tFunc, nVanCittert):
         if(nVanCittert==0): return tFunc
-        q=np.zeros(self._nk)
-        for i in range(self._nk):
-            q[i]=self.ONE-(self.ONE-tFunc[i])**(nVanCittert+1)
-        return q
+        nvp1=nVanCittert+1
+        return np.array([self.ONE-(self.ONE-v)**nvp1 for v in tFunc])
 #-----------------------------------------------------------------------
