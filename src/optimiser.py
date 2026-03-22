@@ -141,6 +141,11 @@ class Optimiser(Const, Log):
         xo[1]=Const.HALF*Const.HALF
         return xo
 
+    def __getInitialGuessFromOld(self, nmp1, xOld):
+        xo=np.zeros(nmp1)
+        xo[0:np.size(xOld)]=xOld
+        return xo
+
     def __getInitialGuessForThreePointInverse(self, nmp1, nVan):
         xo=np.zeros(nmp1)
         xo[0]=nVan*Const.HALF+Const.ONE
@@ -155,19 +160,15 @@ class Optimiser(Const, Log):
     def __getConstraintMatrixA(self, nmp1):
         k=self._dfilter.getK()
         A=np.ndarray((self._nk, nmp1))
-        A[:, 0]=Const.ONE
-        for i in range(self._nk):
-            for l in range(1, nmp1):
-                A[i,l]=Const.TWO*np.cos(l*k[i])
+        for i in range(self._nk): A[i,:]=[Const.TWO*np.cos(l*k[i]) for l in range(nmp1)]
+        A[:,0]=Const.ONE        
         return A
 
     def __getConstraintMatrixD(self, nmp1):
         k=self._dfilter.getK()
         D=np.ndarray((self._nk, nmp1))
+        for i in range(self._nk): D[i,:]=[l*np.sin(l*k[i]) for l in range(nmp1)]
         D[:,0]=Const.ZERO
-        for i in range(self._nk):
-            for l in range(1, nmp1):
-                D[i,l]=l*np.sin(l*k[i])
         return D
 
     def __getConstraintConsistency(self, matrixA):
