@@ -7,14 +7,14 @@ errors=Errors()
 
 flt=Implicit(wavenumber, param=-0.262)
 dflt=DiscreteFilter(wavenumber)
-opt=Optimiser(flt, dflt, isAdaptive=True, isNoDampingAtZero=True, isFullDampingAtPi=True, isMonotonicNegative=True)
+opt=Optimiser(flt, dflt, isAdaptive=True, isNoDampingAtK=[0.0], isFullDampingAtPi=True, isMonotonicNegative=True)
 opt.run()
 percErrorF=errors.maperc(dflt.getTransferFunction(), flt.getTransferFunction())
 print("Forward filter mean abs perc error=", percErrorF)
 
 recTfunc=ReconstructedTransferFunction(dflt, nVanCittert=nVanCit)
 vdflt=DiscreteFilter(wavenumber, isForward=False)
-iopt=Optimiser(recTfunc, vdflt, optError=1.0e-5, isNoDampingAtZero=True, isMonotonicPositive=True)
+iopt=Optimiser(recTfunc, vdflt, optError=1.0e-5, isNoDampingAtK=[0.0], isMonotonicPositive=True)
 iopt.run()
 
 vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()

@@ -1,20 +1,20 @@
 from include import *
 
-nVanCit=5
+nVanCit=50
 
 wavenumber=Wavenumber()
 errors=Errors()
 
 flt=Gaussian(wavenumber, param=4.0)
 dflt=DiscreteFilter(wavenumber)
-opt=Optimiser(flt, dflt, isAdaptive=True, isNoDampingAtZero=True, isMonotonicNegative=True)
+opt=Optimiser(flt, dflt, isAdaptive=True, isNoDampingAtK=[0.0], isMonotonicNegative=True)
 opt.run()
 percErrorF=errors.maperc(dflt.getTransferFunction(), flt.getTransferFunction())
 print("Forward filter mean abs perc error=", percErrorF)
 
 recTfunc=ReconstructedTransferFunction(dflt, nVanCittert=nVanCit)
 vdflt=DiscreteFilter(wavenumber, isForward=False)
-iopt=Optimiser(recTfunc, vdflt, optError=1.0e-5, isNoDampingAtZero=True, isMonotonicPositive=True)
+iopt=Optimiser(recTfunc, vdflt, optError=1.0e-5, isNoDampingAtK=[0.0], isMonotonicPositive=True)
 iopt.run()
 
 vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()

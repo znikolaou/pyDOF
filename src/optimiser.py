@@ -15,42 +15,41 @@ class Optimiser(Const, Log):
             whose coeffs we solve for.
         method (string): the optimiser method to use for constrained 
             optimisation. Suggested candidates are  "SLSQP", and 
-            "trust-constr". 
-        isFullDampingAtPi (boolean): True, False. If true, then 
-            \hat{G}(pi)=0 always. 
-        isZeroToOne (boolean): True, False. If true, then 
-            0 < \hat{G}(k) < 1 for all k in (0, pi). 
+            "trust-constr".
+        lamda (float): regularisation/smoothness parameter >=0.
+        optError (float): adaptive optimiser error.
+        maxIterations (int) : max iterations for optimiser.
         isAdaptive (boolean): True, False. If true, the discrete filter 
             stencil size will increase until the target optimisation error 
-            self._optError is reached.
-        lamda (float): regularisation/smoothness parameter.
+            self._optError is reached. 
+        isZeroToOne (boolean): If true, then 0 <= \hat{G}(k) <= 1 for all k in (0, pi).
+        isPositive (boolean): If true, then 0 <= \hat{G}(k) for all k in (0, pi).
+        isMonotonicNegative (boolean): If true, then 0 <= d\hat{G}(k)/dk <= 0 for all k in [0, pi].
+        isMonotonicPositive (boolean): If true, then 0 <= d\hat{G}(k)/dk >= 0 for all k in [0, pi].
+        isNoDampingAtK (float []): If not none, then \hat{G}(k)= 1 for all k in list.
+        isFullDampingAtK (float []): If not none, then \hat{G}(k)= 0 for all k in list.
 
     Author: Z. Nikolaou.
     """
     def __init__(self, target, discreteFilter, method="SLSQP", lamda=0.e0, optError=1.0e-6, maxIterations=100, \
-            isAdaptive=True, \
-            isNoDampingAtZero=False, isFullDampingAtPi=False, isZeroToOne=False, \
-            isNoDampingAtPi=False, isFullDampingAtZero=False, \
-            isMonotonicNegative=False, isMonotonicPositive=False, isPositive=False,
-            isNoDampingAtK=None, isFullDampingAtK=None): 
+            isAdaptive=True, isZeroToOne=False, isPositive=False, isMonotonicNegative=False, isMonotonicPositive=False, \
+            isNoDampingAtK=None, isFullDampingAtK=None):
+        #
         Log.__init__(self, type(self).__name__) 
         self._target=target
         self._dfilter=discreteFilter
         self._method=method
-        self._isNoDampingAtZero=isNoDampingAtZero
-        self._isFullDampingAtPi=isFullDampingAtPi
-        self._isNoDampingAtPi=isNoDampingAtPi
-        self._isFullDampingAtZero=isFullDampingAtZero
-        self._isZeroToOne=isZeroToOne
-        self._isMonotonicPositive=isMonotonicPositive
-        self._isMonotonicNegative=isMonotonicNegative
-        self._isPositive=isPositive
-        self._isNoDampingAtK=isNoDampingAtK
-        self._isFullDampingAtK=isFullDampingAtK
-        self._isAdaptive=isAdaptive
         self._lamda=lamda
         self._optError=optError
         self._maxIterations=maxIterations
+        self._isAdaptive=isAdaptive
+        self._isZeroToOne=isZeroToOne
+        self._isPositive=isPositive
+        self._isMonotonicPositive=isMonotonicPositive
+        self._isMonotonicNegative=isMonotonicNegative 
+        self._isNoDampingAtK=isNoDampingAtK
+        self._isFullDampingAtK=isFullDampingAtK
+        #
         self._objFunc=ObjectiveFunction(self._target, self._dfilter, lamda=self._lamda)
         self._nk=self._dfilter.getNk()
         self._k=self._dfilter.getK()
@@ -174,9 +173,6 @@ class Optimiser(Const, Log):
     def __getConstraintConsistency(self, matrixA):
         return LinearConstraint(matrixA[0, :], Const.ONE, Const.ONE)
 
-    def __getConstraintConsistencyAtPi(self, matrixA):
-        return LinearConstraint(matrixA[self._nk-1, :], Const.ONE, Const.ONE)
-
     def __getConstraintMonotonicNeg(self, matrixD):
         return LinearConstraint(matrixD[:, :], Const.ZERO, np.inf)
 
@@ -189,9 +185,6 @@ class Optimiser(Const, Log):
     def __getConstraintPositive(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk-1, :], Const.ZERO, np.inf)
 
-    def __getConstraintFullDampingAtPi(self, matrixA):
-        return LinearConstraint(matrixA[self._nk-1, :], Const.ZERO, Const.ZERO)
-
     def __getConstraintNoDampingAtK(self, matrixA, k):
         i=self._k.searchsorted(k)
         return LinearConstraint(matrixA[i, :], Const.ONE, Const.ONE)
@@ -200,9 +193,6 @@ class Optimiser(Const, Log):
         i=self._k.searchsorted(k)
         return LinearConstraint(matrixA[i, :], Const.ZERO, Const.ZERO)
 
-    def __getConstraintFullDampingAtZero(self, matrixA):
-        return LinearConstraint(matrixA[0, :], Const.ZERO, Const.ZERO)
-
     def __getConstraintBetweenOneAndNPlusOne(self, matrixA):
         return LinearConstraint(matrixA[1:self._nk-1, :], Const.ONE, self._nVanCittert+1)
     
@@ -210,12 +200,9 @@ class Optimiser(Const, Log):
         A=self.__getConstraintMatrixA(nmp1)
         D=self.__getConstraintMatrixD(nmp1)
         constraintsList=[]
-        if(self._isNoDampingAtZero): constraintsList.append(self.__getConstraintConsistency(A))
-        if(self._isFullDampingAtZero): constraintsList.append(self.__getConstraintFullDampingAtZero(A))
-        if(self._isFullDampingAtPi): constraintsList.append(self.__getConstraintFullDampingAtPi(A))
-        if(self._isNoDampingAtPi): constraintsList.append(self.__getConstraintConsistencyAtPi(A))
         if(self._isMonotonicPositive): constraintsList.append(self.__getConstraintMonotonicPos(D))
         if(self._isMonotonicNegative): constraintsList.append(self.__getConstraintMonotonicNeg(D))
+        if(self._isPositive): constraintsList.append(self.__getConstraintPositive(A))
         if(self._isNoDampingAtK is not None):
             for k in self._isNoDampingAtK: constraintsList.append(self.__getConstraintNoDampingAtK(A, k))
         if(self._isFullDampingAtK is not None):
@@ -224,7 +211,6 @@ class Optimiser(Const, Log):
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
         else:
             if(self._isZeroToOne): constraintsList.append(self.__getConstraintZeroToOne(A))
-            if(self._isPositive): constraintsList.append(self.__getConstraintPositive(A))
 
         return constraintsList
 

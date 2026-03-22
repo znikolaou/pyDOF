@@ -26,6 +26,7 @@ class ObjectiveFunction(Errors):
         self._lastError=None
         self._lastSolution=None
         self._lamda=lamda
+        self._gradError=0.0e0
         
     def get(self, coeffs):
         self._counter+=1
@@ -34,12 +35,12 @@ class ObjectiveFunction(Errors):
         else:
             self._lastSolution= self._dfilter.getTransferFunction(coeffs)
            
-        self._lastError=self.msqe(self._targetTfunc, self._lastSolution)                
-        self._gradError=np.mean(np.abs(np.gradient(self._lastSolution)))
-      
-        self._lastError=self._lastError+self._lamda*self._gradError
+        self._lastError=self.msqe(self._targetTfunc, self._lastSolution)   
 
-        return self._lastError
+        if(self._lamda!=0.0e0):
+            self._gradError=np.mean(np.abs(np.gradient(self._lastSolution)))
+      
+        return self._lastError+self._lamda*self._gradError
 
     def getLastSolution(self): return self._lastSolution
 
