@@ -87,8 +87,12 @@ class Optimiser(Const, Log):
         errorOld=None
         solOld=None
         if self._isAdaptive: maxIter=self._maxIterations
+
         for i in range(maxIter):
-            x=self.__getInitialGuessForThreePointForward(nmp1)
+            if self._isInverse:
+                x=self.__getInitialGuessForConstantAtUnity(nmp1)
+            else:
+                x=self.__getInitialGuessForThreePointForward(nmp1)
             self._solution=self.__getConstrainedSolution(x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
             self.__printIterInfo(itr, nmp1, self._error) 
@@ -107,7 +111,7 @@ class Optimiser(Const, Log):
             errorOld=self._error
             solOld=self._solution
             xOld=solOld.x
- 
+        
         if isConverged:
             print('\n*Success: converged at iteration ', itr, 'error=', self._error)
         else:
@@ -142,14 +146,18 @@ class Optimiser(Const, Log):
         return xo
 
     def __getInitialGuessFromOld(self, nmp1, xOld):
+        nmp1Old=np.size(xOld)
         xo=np.zeros(nmp1)
-        xo[0:np.size(xOld)]=xOld
+        if nmp1>=nmp1Old:
+            xo[0:nmp1Old]=xOld
+        else:
+            xo[0:nmp1]=xOld[0:nmp1]
         return xo
 
-    def __getInitialGuessForThreePointInverse(self, nmp1, nVan):
+    def __getInitialGuessForThreePointInverse(self, nmp1):
         xo=np.zeros(nmp1)
-        xo[0]=nVan*Const.HALF+Const.ONE
-        xo[1]=-nVan*Const.HALF*Const.HALF
+        xo[0]=2.0#nVan*Const.HALF+Const.ONE
+        xo[1]=-0.5#-nVan*Const.HALF*Const.HALF
         return xo
 
     def __getInitialGuessForConstantAtUnity(self, nmp1):
