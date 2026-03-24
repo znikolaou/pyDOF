@@ -3,6 +3,7 @@ from filters import *
 from discreteFilter import *
 from errors import *
 from reconstructedTransferFunction import *
+import matplotlib.pyplot as plt 
 #-----------------------------------------------------------------------
 class ObjectiveFunction(Errors):
     """
@@ -33,9 +34,9 @@ class ObjectiveFunction(Errors):
         if(isinstance(self._target, ReconstructedTransferFunction)):
             self._lastSolution=self._target.getVQTransferFunction(coeffs)
         else:
-            self._lastSolution= self._dfilter.getTransferFunction(coeffs)
+            self._lastSolution=self._dfilter.getTransferFunction(coeffs)
            
-        self._lastError=self.msqe(self._targetTfunc, self._lastSolution)   
+        self._lastError=self.msqe(self._targetTfunc, self._lastSolution)
 
         if(self._lamda!=0.0e0):
             self._gradError=np.mean(np.abs(np.gradient(self._lastSolution)))
