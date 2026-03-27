@@ -115,8 +115,9 @@ class Optimiser(Const, Log):
         if isConverged:
             print('\n*Success: converged at iteration ', itr, 'error=', self._error)
         else:
-            print('\n*Failure to converge for error=', self._optError)
-            print('\tOptimisation error attained=', self._error)
+            if self._isAdaptive:
+                print('\n*Failure to converge for error=', self._optError)
+                print('\tOptimisation error attained=', self._error)
 
         self._dfilter.setCoeffs(self.get())
         self._dfilter.setOptError(self._error)
