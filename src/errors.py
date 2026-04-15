@@ -7,12 +7,30 @@ class Errors:
 
     Author: Z. Nikolaou
     """
+    
+    @staticmethod
+    def normSqe(a, b): return np.square(np.subtract(a, b))/np.size(a)
+
+    @staticmethod
+    def normAbs(a, b): return np.abs(np.subtract(a, b))/np.size(a)
 
     @staticmethod
     def msqe(a, b): return np.square(np.subtract(a, b)).mean()
 
     @staticmethod
-    def mase(a, b): return np.abs(np.subtract(a, b)).mean()
+    def mabse(a, b): return np.abs(np.subtract(a, b)).mean()
+
+    @staticmethod
+    def maxNormAbs(a): return np.max(Errors.normAbs(a))
+
+    @staticmethod
+    def meanAbs(a): return np.abs(a).mean()
+
+    @staticmethod
+    def meanSq(a): return np.square(a).mean()
+
+    @staticmethod
+    def maxNormSqe(a, b): return np.max(Errors.normSqe(a, b))
 
     @staticmethod
     def msqeSimpson(x, a, b):
@@ -44,10 +62,6 @@ class Errors:
     def maxAbsPerc(a, bTarget):
         nc, aperce=Errors.aperce(a, bTarget)
         return [np.argmax(aperce), np.max(aperce)]
-
-    @staticmethod
-    def maxOvershoot(a): return (np.max(a)-1.e0)*100.0
-
 
 #-----------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 from include import *
 
-nVanCit=50
+nVanCit=500
 
 wavenumber=Wavenumber()
 errors=Errors()

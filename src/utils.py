@@ -59,3 +59,30 @@ class Form(Const):
     @staticmethod
     def long(number): return Const.NUM_FORMAT_LONG(number)
 #-----------------------------------------------------------------------
+
+class FUtil():
+
+    @staticmethod
+    def getCutOffIndex(g): return g.tolist().index(0.5)
+
+    @staticmethod
+    def getButterOrderForDeltaK(kc, deltaK, gpass=0.99, gstop=0.01): 
+        sol=scipy.optimize.root(FUtil.funcButter, 10, args=(deltaK, kc, gpass, gstop))
+        return sol.x
+
+    @staticmethod
+    def funcButter(n, deltaK, kc, gpass, gstop):
+        kpass=kc*FUtil.getButterVal(n, gpass)
+        kstop=kc*FUtil.getButterVal(n, gstop)
+        return (kstop-kpass)-deltaK
+
+    @staticmethod
+    def getButterVal(n, g):
+        return 1.0/(2.0*n)*np.log(1/3.0*(1/g**2.0-1.0))
+    
+        
+
+
+
+
+

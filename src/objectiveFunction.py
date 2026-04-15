@@ -18,7 +18,7 @@ class ObjectiveFunction(Errors):
     Author: Z. Nikolaou.
     """ 
 
-    def __init__(self, target, discreteFilter, lamda=0.0e0):
+    def __init__(self, target, discreteFilter, lamda=0.0e0, error='msqe'):
         self._target=target
         self._dfilter=discreteFilter
         self._k=self._dfilter.getK()
@@ -27,7 +27,7 @@ class ObjectiveFunction(Errors):
         self._lastError=None
         self._lastSolution=None
         self._lamda=lamda
-        self._gradError=0.0e0
+        self._error=error
         
     def get(self, coeffs):
         self._counter+=1
@@ -35,13 +35,23 @@ class ObjectiveFunction(Errors):
             self._lastSolution=self._target.getVQTransferFunction(coeffs)
         else:
             self._lastSolution=self._dfilter.getTransferFunction(coeffs)
-           
-        self._lastError=self.msqe(self._targetTfunc, self._lastSolution)
+        
+        gradEr=0.0e0
+        if(self._lamda!=0.0e0): 
+            grad=np.gradient(self._lastSolution)
+            if self._error=='msqe': 
+                gradEr=self._lamda*self.meanSq(grad)
+            elif self._error=='mabse':
+                gradEr=self._lamda*self.meanAbs(grad)
+ 
+        if self._error=='msqe':
+            er=self.msqe(self._targetTfunc, self._lastSolution)
+        elif self._error=='mabse':
+            er=self.mabse(self._targetTfunc, self._lastSolution)
 
-        if(self._lamda!=0.0e0):
-            self._gradError=np.mean(np.abs(np.gradient(self._lastSolution)))
-      
-        return self._lastError+self._lamda*self._gradError
+        self._lastError=er+gradEr
+        
+        return self._lastError
 
     def getLastSolution(self): return self._lastSolution
 

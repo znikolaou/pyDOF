@@ -290,6 +290,17 @@ class Butterworth(Filter):
             return tFunc
 
     def getCutOff(self): return self._param[0]
+
+    def getOrder(self): return self._param[1]
+
+    def getKfromG(self, v): return self.getCutOff()*(1.0/3.0*(1.0/(v*v)-1.0))**(1./(2.0*self.getOrder()))
+
+    def getKpass(self): return self.getKfromG(0.95)
+
+    def getKstop(self): return self.getKfromG(0.05)
+
+    def getTransWidth(self): return self.getKstop()-self.getKpass()
+
 #-----------------------------------------------------------------------
 class ErrorFunction(Filter):
     """

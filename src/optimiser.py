@@ -31,7 +31,7 @@ class Optimiser(Const, Log):
 
     Author: Z. Nikolaou.
     """
-    def __init__(self, target, discreteFilter, method="SLSQP", lamda=0.e0, optError=1.0e-6, maxIterations=100, \
+    def __init__(self, target, discreteFilter, method="SLSQP", lamda=0.e0, optError=1.0e-6, maxIterations=100, error="msqe", \
             isAdaptive=True, isZeroToOne=False, isPositive=False, isMonotonicNegative=False, isMonotonicPositive=False, \
             isNoDampingAtK=None, isFullDampingAtK=None):
         #
@@ -42,6 +42,7 @@ class Optimiser(Const, Log):
         self._lamda=lamda
         self._optError=optError
         self._maxIterations=maxIterations
+        self._error=error
         self._isAdaptive=isAdaptive
         self._isZeroToOne=isZeroToOne
         self._isPositive=isPositive
@@ -50,7 +51,7 @@ class Optimiser(Const, Log):
         self._isNoDampingAtK=isNoDampingAtK
         self._isFullDampingAtK=isFullDampingAtK
         #
-        self._objFunc=ObjectiveFunction(self._target, self._dfilter, lamda=self._lamda)
+        self._objFunc=ObjectiveFunction(self._target, self._dfilter, lamda=self._lamda, error=self._error)
         self._nk=self._dfilter.getNk()
         self._k=self._dfilter.getK()
         self._isInverse=not self._dfilter.isForward()
