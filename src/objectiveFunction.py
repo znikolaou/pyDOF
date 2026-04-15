@@ -3,7 +3,6 @@ from filters import *
 from discreteFilter import *
 from errors import *
 from reconstructedTransferFunction import *
-import matplotlib.pyplot as plt 
 #-----------------------------------------------------------------------
 class ObjectiveFunction(Errors, Const):
     """
