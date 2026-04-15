@@ -5,7 +5,7 @@ from errors import *
 from reconstructedTransferFunction import *
 import matplotlib.pyplot as plt 
 #-----------------------------------------------------------------------
-class ObjectiveFunction(Errors):
+class ObjectiveFunction(Errors, Const):
     """
     Class for calculating the optimiser objective function. 
 
@@ -22,40 +22,34 @@ class ObjectiveFunction(Errors):
         self._target=target
         self._dfilter=discreteFilter
         self._k=self._dfilter.getK()
-        self._targetTfunc=self._target.getTransferFunction() 
+        self._trgFunc=self._target.getTransferFunction() 
         self._counter=0
-        self._lastError=None
-        self._lastSolution=None
+        self._lastEr=None
+        self._lastSol=None
         self._lamda=lamda
-        self._error=error
+        self._er=error
         
     def get(self, coeffs):
         self._counter+=1
+        gradEr=Const.ZERO
+
         if(isinstance(self._target, ReconstructedTransferFunction)):
-            self._lastSolution=self._target.getVQTransferFunction(coeffs)
+            self._lastSol=self._target.getVQTransferFunction(coeffs)
         else:
-            self._lastSolution=self._dfilter.getTransferFunction(coeffs)
+            self._lastSol=self._dfilter.getTransferFunction(coeffs)
         
-        gradEr=0.0e0
-        if(self._lamda!=0.0e0): 
-            grad=np.gradient(self._lastSolution)
-            if self._error=='msqe': 
-                gradEr=self._lamda*self.meanSq(grad)
-            elif self._error=='mabse':
-                gradEr=self._lamda*self.meanAbs(grad)
+        if(self._lamda!=Const.ZERO): grad=np.gradient(self._lastSol)
  
-        if self._error=='msqe':
-            er=self.msqe(self._targetTfunc, self._lastSolution)
-        elif self._error=='mabse':
-            er=self.mabse(self._targetTfunc, self._lastSolution)
+        if self._er=='msqe':
+            self._lastEr=self.msqe(self._trgFunc, self._lastSol)+self._lamda*self.meanSq(grad)
+        elif self._er=='mabse':
+            self._lastEr=self.mabse(self._trgFunc, self._lastSol)+self._lamda*self.meanAbs(grad)
+ 
+        return self._lastEr
 
-        self._lastError=er+gradEr
-        
-        return self._lastError
+    def getLastSolution(self): return self._lastSol
 
-    def getLastSolution(self): return self._lastSolution
-
-    def getLastError(self): return self._lastError
+    def getLastError(self): return self._lastEr
 
 #-----------------------------------------------------------------------
 
