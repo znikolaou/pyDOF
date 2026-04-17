@@ -139,81 +139,102 @@ class Implicit(Filter):
 
     def getCutOff(self): return np.arccos(-Const.TWO*self._param)
 #-----------------------------------------------------------------------
-class SharpWindow(Filter):
+class Sharp(Filter):
     """
-    Class for a sharp window filter.
-    ^G(k)=1 for kh \in [kcl, kch]. 
+    Class for designing sharp filters (lowpass, highpass, bandpass, bandstop). 
 
     Attributes: 
         wavenumber (Wavenumber): the wavenumber object. 
-        kcl (double): filter lower cut-off wavenumber.
-        kch (double): filter higher cut-off wavenumber. 
+        fType (str): "lowpass", "highpass", "bandpass", "bandstop". 
+        kbounds (list): wavenumber boundaries. 
 
     Author: Z. Nikolaou
     """
- 
-    def __init__(self, wavenumberOb, kcl=0.0e0, kch=np.pi/2.0e0):
+    def __init__(self, wavenumberOb, fType="lowpass", kbounds=[]):
         self._k=wavenumberOb.get()
-        self._param=[kcl, kch]
+        self._fType=fType
+        self._kbounds=kbounds
+        self._nkb=len(kbounds)
+        self.__checkBounds()
+        self.__checkSize()
+        self.__checkIsMonotone()
         self._tFunc=self.__buildTransferFunction()
         Filter.__init__(self, self._k, self._tFunc)
 
     def name(self): return "Sharp window"
 
+    def __checkBounds(self):
+        maxkb=np.max(self._kbounds)
+        minkb=np.min(self._kbounds)
+        maxk=np.max(self._k)
+        mink=np.min(self._k)
+        ier=0
+        if minkb<mink or minkb>maxk: ier=1
+        if maxkb<mink or maxkb>maxk: ier=2
+        if ier!=0:
+            print('*Sharp.__checkBounds() error:')
+            print('\t kbounds outside wavenumber range! Terminating ...')
+            exit()
+        return
+ 
+    def __checkSize(self):
+        ier=0
+        if self._fType=="lowpass" or self._fType=="highpass": 
+            if self._nkb!=1: ier=1
+        else:
+            if (self._nkb%2)!=0: 
+                ier=2
+        if ier!=0:
+            print('Sharp.__checkSize() error:')
+            print('\t len(kbounds) must be 1 for fType=lowpass/highpass and len(kbounds)')
+            print('\t len(kbounds) must be even for fType=bandpass/bandstop.')
+            print('\t Terminating ...')
+            exit()
+        return
+
+    def __checkIsMonotone(self):
+        if self._nkb==1: return
+        isMonotone=True
+        for i in range(self._nkb-1):
+            if self._kbounds[i+1]<=self._kbounds[i]: 
+                isMonotone=False
+                break
+        if not isMonotone:
+            print('*Sharp.__checkIsMonotone() error:')
+            print('\t Supplied kbounds range should be monotonically increasing. Terminating ...')
+            exit()
+        return
+                    
     def __buildTransferFunction(self):
-        tFunc=[]
-        for k in self._k:
-            if(k>=self._param[0] and k<=self._param[1]):
-                tFunc.append(Const.ONE)
-            else:
-                tFunc.append(Const.ZERO)
-        return tFunc
+        nk=len(self._k)
+        if self._fType=="lowpass":
+            tFunc=np.zeros(nk)
+            for i in range(nk):
+                if self._k[i]<=self._kbounds[0]: tFunc[i]=Const.ONE
+        elif self._fType=="highpass":
+            tFunc=np.ones(nk)
+            for i in range(nk):
+                if self._k[i]<=self._kbounds[0]: tFunc[i]=Const.ZERO
+        else:
+            indices=[self.__getFirst(kb, self._k) for kb in self._kbounds]
+            ni=len(indices)
+            if self._fType=="bandpass":
+                tFunc=np.zeros(nk)
+                for i in range(0, ni, 2): tFunc[indices[i]:indices[i+1]]=Const.ONE
+            elif self._fType=="bandstop":
+                tFunc=np.ones(nk)
+                for i in range(0, ni, 2): tFunc[indices[i]:indices[i+1]]=Const.ZERO
+
+        return list(tFunc)
+
+    def __getFirst(self, x, xList):
+        for i in range(len(xList)):
+            if x<xList[i]:
+                ip=i
+                break
+        return ip
 
     def getCutOff(self): return [self._param[0], self._param[1]]
-      
-#-----------------------------------------------------------------------
-class SharpCutOff(Filter):
-    """
-    Class for a sharp cut-off filter.
-
-    Attributes: 
-        wavenumber (Wavenumber): the wavenumber object. 
-        param (double): filter cut-off wavenumber (kch). 
-
-    Author: Z. Nikolaou
-    """
- 
-    def __init__(self, wavenumberOb, param):
-        self._k=wavenumberOb.get()
-        self._param=param
-        self._tFunc=self.__buildTransferFunction()
-        Filter.__init__(self, self._k, self._tFunc)
-
-    def name(self): return "Sharp cut-off"
-
-    def __buildTransferFunction(self):
-        tFunc=[]
-        for k in self._k:
-            if(k<=self._param):
-                tFunc.append(Const.ONE)
-            else:
-                tFunc.append(Const.ZERO)
-        return tFunc
-
-    def getCutOff(self): return self._param
-
-    def get(self, x):
-        n=len(x)
-        g=np.zeros(n)
-        for i in range(n):
-            if x[i] != 0.0e0:
-                g[i]=1.0e0/np.pi*np.sin(self._param*x[i])/x[i]
-            else:
-                x[i]=self._param/np.pi
-        return g
-
-    def getPassBandIndex(self): return self._tFunc.index(0)-1
-      
 #-----------------------------------------------------------------------
 class Box(Filter):
     """
