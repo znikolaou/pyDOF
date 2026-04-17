@@ -28,12 +28,13 @@ class Optimiser(Const, Log):
         isMonotonicPositive (boolean): If true, then 0 <= d\hat{G}(k)/dk >= 0 for all k in [0, pi].
         isNoDampingAtK (float []): If not none, then \hat{G}(k)= 1 for all k in list.
         isFullDampingAtK (float []): If not none, then \hat{G}(k)= 0 for all k in list.
+        isBounded ([, , []]): List of vlower, vupper, and wavenumbers k where  vlower<=g(k)<=vupper. 
 
     Author: Z. Nikolaou.
     """
     def __init__(self, target, discreteFilter, method="SLSQP", lamda=0.e0, optError=1.0e-6, maxIterations=100, error="msqe", \
             isAdaptive=True, isZeroToOne=False, isPositive=False, isMonotonicNegative=False, isMonotonicPositive=False, \
-            isNoDampingAtK=None, isFullDampingAtK=None):
+            isNoDampingAtK=None, isFullDampingAtK=None, isBounded=None):
         #
         Log.__init__(self, type(self).__name__) 
         self._target=target
@@ -50,6 +51,7 @@ class Optimiser(Const, Log):
         self._isMonotonicNegative=isMonotonicNegative 
         self._isNoDampingAtK=isNoDampingAtK
         self._isFullDampingAtK=isFullDampingAtK
+        self._isBounded=isBounded
         #
         self._objFunc=ObjectiveFunction(self._target, self._dfilter, lamda=self._lamda, error=self._error)
         self._nk=self._dfilter.getNk()
@@ -64,10 +66,10 @@ class Optimiser(Const, Log):
     def __printInfo(self):
         if(self._isInverse):
             print('')
-            print("Optimiser will run for inverse discrete filter:")
+            print("Optimiser-inverse filter:")
         else:
             print('')
-            print("Optimiser will run for forward discrete filter:")
+            print("Optimiser-forward filter:")
 
     def __getNvanCittert(self):
         nv=None
@@ -181,6 +183,10 @@ class Optimiser(Const, Log):
         D[:,0]=Const.ZERO
         return D
 
+    def __getConstraintBounded(self, matrixA, kb, vlower, vupper):
+        i=self._k.searchsorted(kb)
+        return LinearConstraint(matrixA[i, :], vlower, vupper)
+
     def __getConstraintConsistency(self, matrixA):
         return LinearConstraint(matrixA[0, :], Const.ONE, Const.ONE)
 
@@ -218,6 +224,14 @@ class Optimiser(Const, Log):
             for k in self._isNoDampingAtK: constraintsList.append(self.__getConstraintNoDampingAtK(A, k))
         if(self._isFullDampingAtK is not None):
             for k in self._isFullDampingAtK: constraintsList.append(self.__getConstraintFullDampingAtK(A, k))
+        if(self._isBounded is not None):
+            krange=self._isBounded[2]
+            vlower=self._isBounded[0]
+            vupper=self._isBounded[1]
+            for k in self._k:
+                if k>=krange[0] and k<=krange[1]:
+                    constraintsList.append(self.__getConstraintBounded(A, k, vlower, vupper))
+        #
         if(self._isInverse): 
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
         else:

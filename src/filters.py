@@ -154,6 +154,7 @@ class Sharp(Filter):
         self._k=wavenumberOb.get()
         self._fType=fType
         self._kbounds=kbounds
+        self._param=kbounds
         self._nkb=len(kbounds)
         self.__checkBounds()
         self.__checkSize()

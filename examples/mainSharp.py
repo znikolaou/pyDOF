@@ -1,4 +1,5 @@
 from include import *
+from errors import *
 import scipy.signal as signal
 import numpy as np
 
@@ -9,26 +10,23 @@ kcut=knyq/2.0
 ns=73
 #
 nsh=int((ns-1)/2)
-nButter=FUtil.getButterOrderForDeltaK(kcut, deltak)
 #
 wavenumber=Wavenumber()
 k=wavenumber.get()
-flt=Sharp(wavenumber, kbounds=[kcut])
-fltB=Butterworth(wavenumber, kcut, nButter, 'lowpass')
+ipass=k.searchsorted(kcut-deltak/2.0)
+kpass=k[0:ipass+1]
 df=DiscreteFilter(wavenumber)
 
-npl=1000
-ypass=np.linspace(1.0e-12,1.0,npl)
-kpass=np.ones(npl)*(kcut-deltak/2.0)
-kstop=np.ones(npl)*(kcut+deltak/2.0)
-kc=np.ones(npl)*(kcut)
+#Define a sharp lowpass filter
+flt=Sharp(wavenumber, kbounds=[kcut], fType='lowpass')
+tfSharp=flt.getTransferFunction()
 
 #window method-Hamming
 bw=signal.firwin(ns, cutoff=kcut, fs=ks)
 hw=df.getTransferFunction(bw[nsh:])
 
 #window method-Kaiser
-bwk=signal.firwin(ns, cutoff=kcut, width=deltak, fs=ks, pass_zero='lowpass')
+bwk=signal.firwin(ns, cutoff=kcut, width=deltak, window='kaiser', fs=ks, pass_zero='lowpass')
 hwk=df.getTransferFunction(bwk[nsh:])
 
 #parks mcclellan
@@ -42,44 +40,64 @@ ho=df.getTransferFunction(bo[nsh:])
 
 #pyDof
 dflt=DiscreteFilter(wavenumber, nStencil=ns)
-
-#works very well!
-#opt=Optimiser(flt, dflt, isAdaptive=False, isNoDampingAtK=[0.0], lamda=30.0, error="mabse")  
-#opt=Optimiser(flt, dflt, isAdaptive=False, isNoDampingAtK=[0.0], isFullDampingAtK=[np.pi], isPositive=True, lamda=30.0, error="mabse")  
-
+#opt=Optimiser(flt, dflt, isAdaptive=False, isPositive=False, lamda=20.0, error="mabse")  
+opt=Optimiser(flt, dflt, isAdaptive=False, isPositive=False, isNoDampingAtK=[0.0, kcut-deltak/2.0], isFullDampingAtK=[kcut+deltak/2.0, np.pi], isBounded=[1-0.0005, 1+0.0005, [0, kcut-deltak/2.0]], lamda=0.0, error="mabse")  
+#opt=Optimiser(flt, dflt, isAdaptive=False, isPositive=False, isBounded=[1-0.0005, 1+0.0005, kpass], lamda=10.0, error="mabse")  
+#
 opt.run()
-out=Output(flt, dflt)
-out.write()
+#out=Output(flt, dflt)
+#out.write()
 
-#plt.plot(k, flt.getTransferFunction())
-#plt.plot(k, flt.getTransferFunction(), 'k--', mfc="None")
+#errors
+msqe={}
+msqe['WK']=Errors.msqe(hwk, tfSharp)
+msqe['PM']=Errors.msqe(hp, tfSharp)
+msqe['SQ']=Errors.msqe(ho, tfSharp)
+msqe['PDA']=Errors.msqe(dflt.getTransferFunction(), tfSharp)
+
+mabse={}
+mabse['WK']=Errors.mabse(hwk, tfSharp)
+mabse['PM']=Errors.mabse(hp, tfSharp)
+mabse['SQ']=Errors.mabse(ho, tfSharp)
+mabse['PDA']=Errors.mabse(dflt.getTransferFunction(), tfSharp)
+
+#max overshoot
+overshoot={}
+overshoot['WK']=(np.max(hwk)-1.0)*100.0
+overshoot['PM']=(np.max(hp)-1.0)*100.0
+overshoot['SQ']=(np.max(ho)-1.0)*100.0
+overshoot['PDA']=(np.max(dflt.getTransferFunction())-1.0)*100.0
+
+print('MSQE:')
+for key in msqe: print(key, msqe[key])
+print('MABSE:')
+for key in mabse: print(key, mabse[key])
+print('Max % overshoot in passband:')
+for key in overshoot: print(key, overshoot[key])
 
 plt.subplot(1,2,1)
-plt.plot(kc, ypass, 'k--')
-#plt.plot(kstop, ypass, 'k--')
-#plt.plot(k, (np.abs(hw)), label='$Window-Hamming$')
-plt.plot(k, np.abs(hwk), label='$Window-Kaiser$')
-plt.plot(k, np.abs(hp), label='$Parks-McClellan$')
-plt.plot(k, np.abs(ho), label='$Least-squares$')
-plt.plot(k, dflt.getTransferFunction(), label="$pyDof$")
+plt.plot(k, tfSharp, 'k--')
+plt.plot(k, hwk, label='$Window-Kaiser$')
+plt.plot(k, hp, label='$Parks-McClellan$')
+plt.plot(k, ho, label='$Least-squares$')
+plt.plot(k, dflt.getTransferFunction(), '--', label="$pyDof-A$")
 plt.xlabel('$kh$')
-plt.legend(frameon=False, loc='center left')
+plt.ylabel('$\hat{G}_d$')
+plt.legend(frameon=False, loc='lower left')
 plt.grid('on')
 plt.xlim(0.0, np.pi)
-#
+
 plt.subplot(1,2,2)
-plt.plot(kc, 20*np.log10(ypass), 'k--')
-#plt.plot(kstop, ypass, 'k--')
-#plt.plot(k, (np.abs(hw)), label='$Window-Hamming$')
-plt.plot(k, 20*np.log10(np.abs(hwk)), label='$Window-Kaiser$')
-plt.plot(k, 20*np.log10(np.abs(hp)), label='$Parks-McClellan$')
-plt.plot(k, 20*np.log10(np.abs(ho)), label='$Least-squares$')
-plt.plot(k, 20*np.log10(dflt.getTransferFunction()), label="$pyDof$")
+plt.plot(k, 20*np.log10(hwk), label='$Window-Kaiser$')
+plt.plot(k, 20*np.log10(hp), label='$Parks-McClellan$')
+plt.plot(k, 20*np.log10(ho), label='$Least-squares$')
+plt.plot(k, 20*np.log10(dflt.getTransferFunction()), '--', label="$pyDof-A$")
 plt.xlabel('$kh$')
-plt.legend(frameon=False, loc='center left')
+plt.ylabel('dB')
+plt.legend(frameon=False, loc='lower left')
 plt.grid('on')
 plt.xlim(0.0, np.pi)
-plt.ylime(-140, 0.05)
+plt.ylim(-140, 5.0)
 #
 plt.show()
 

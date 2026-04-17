@@ -42,7 +42,10 @@ class Output(Const):
         f.write('\n! Name='+self._target.name())
         nprm=np.size(self._target._param)
         if nprm==1: 
-            f.write('\n! Parameter='+Form.short(self._target._param))
+            if isinstance(self._target._param, (list)):
+                f.write('\n! Parameter='+Form.short(self._target._param[0]))
+            else:
+                f.write('\n! Parameter='+Form.short(self._target._param))
         else:
             for i in range(nprm): 
                 f.write('\n! Parameter='+Form.short(self._target._param[i]))
