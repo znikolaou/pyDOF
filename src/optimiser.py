@@ -225,12 +225,15 @@ class Optimiser(Const, Log):
         if(self._isFullDampingAtK is not None):
             for k in self._isFullDampingAtK: constraintsList.append(self.__getConstraintFullDampingAtK(A, k))
         if(self._isBounded is not None):
-            krange=self._isBounded[2]
-            vlower=self._isBounded[0]
-            vupper=self._isBounded[1]
-            for k in self._k:
-                if k>=krange[0] and k<=krange[1]:
-                    constraintsList.append(self.__getConstraintBounded(A, k, vlower, vupper))
+            for itm in self._isBounded:
+                print('test', itm)
+                krange=itm[2]
+                vlower=itm[0]
+                vupper=itm[1]
+                print(krange, vlower, vupper)
+                for k in self._k:
+                    if k>=krange[0] and k<=krange[1]:
+                        constraintsList.append(self.__getConstraintBounded(A, k, vlower, vupper))
         #
         if(self._isInverse): 
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
