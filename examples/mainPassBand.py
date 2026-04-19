@@ -13,16 +13,8 @@ nsh=int((ns-1)/2)
 #
 wavenumber=Wavenumber()
 k=wavenumber.get()
-flt=SharpWindow(wavenumber, kpass, kstop)
+flt=Sharp(wavenumber, fType="bandpass", kbounds=[kpass, kstop])
 df=DiscreteFilter(wavenumber)
-
-"""
-npl=1000
-ypass=np.linspace(1.0e-12,1.0,npl)
-kpass=np.ones(npl)*(kcut-deltak/2.0)
-kstop=np.ones(npl)*(kcut+deltak/2.0)
-kc=np.ones(npl)*(kcut)
-"""
 
 #window method-Hamming
 bw=signal.firwin(ns, [kpass, kstop], fs=ks, pass_zero=False)
@@ -43,10 +35,7 @@ ho=df.getTransferFunction(bo[nsh:])
 
 #pyDof
 dflt=DiscreteFilter(wavenumber, nStencil=ns)
-
-#works very well!
-#opt=Optimiser(flt, dflt, isAdaptive=False, lamda=30.0, error="mabse")  
-opt=Optimiser(flt, dflt, isAdaptive=False, isFullDampingAtK=[0.0, np.pi], isPositive=True, lamda=30.0, error="mabse")  
+opt=Optimiser(flt, dflt, adaptive=False, fixZero=[0.0, np.pi], positive=True, lamda=30.0, error="mabse")  
 
 opt.run()
 out=Output(flt, dflt)

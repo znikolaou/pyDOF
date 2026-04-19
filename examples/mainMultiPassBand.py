@@ -40,7 +40,7 @@ ho=df.getTransferFunction(bo[nsh:])
 dflt=DiscreteFilter(wavenumber, nStencil=ns)
 
 #works very well!
-opt=Optimiser(flt, dflt, isAdaptive=False, isFullDampingAtK=[0.0, np.pi], isNoDampingAtK=[np.pi/4.0, np.pi*3.0/4.0], isPositive=True,  lamda=30.0, error="mabse")  
+opt=Optimiser(flt, dflt, adaptive=False, fixZero=[0.0, np.pi], fixOne=[np.pi/4.0, np.pi*3.0/4.0], positive=True,  lamda=30.0, error="mabse")  
 opt.run()
 #out=Output(flt, dflt)
 #out.write()

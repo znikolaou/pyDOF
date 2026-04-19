@@ -9,32 +9,28 @@ class Optimiser(Const, Log):
     Class for the optimiser. 
 
     Attributes: 
-        target (Filter or ReconstructedTransferFunction): the target to 
-            optimise against. 
-        discreteFilter (DiscreteFilter): the discrete filter object 
-            whose coeffs we solve for.
-        method (string): the optimiser method to use for constrained 
-            optimisation. Suggested candidates are  "SLSQP", and 
-            "trust-constr".
+        target (Filter, ReconstructedTransferFunction): the target to optimise against. 
+        discreteFilter (DiscreteFilter): the discrete filter object whose coeffs we solve for.
+        method (string): optimisation method. Suggested candidates: "SLSQP", "trust-constr".
         lamda (float): regularisation/smoothness parameter >=0.
         optError (float): adaptive optimiser error.
-        maxIterations (int) : max iterations for optimiser.
-        isAdaptive (boolean): True, False. If true, the discrete filter 
-            stencil size will increase until the target optimisation error 
-            self._optError is reached. 
-        isZeroToOne (boolean): If true, then 0 <= \hat{G}(k) <= 1 for all k in (0, pi).
-        isPositive (boolean): If true, then 0 <= \hat{G}(k) for all k in (0, pi).
-        isMonotonicNegative (boolean): If true, then 0 <= d\hat{G}(k)/dk <= 0 for all k in [0, pi].
-        isMonotonicPositive (boolean): If true, then 0 <= d\hat{G}(k)/dk >= 0 for all k in [0, pi].
-        isNoDampingAtK (float []): If not none, then \hat{G}(k)= 1 for all k in list.
-        isFullDampingAtK (float []): If not none, then \hat{G}(k)= 0 for all k in list.
-        isBounded ([, , []]): List of vlower, vupper, and wavenumbers k where  vlower<=g(k)<=vupper. 
+        maxIterations (int) : max optimiser iterations.
+        error (string): error method to use: "msqe", "mabse". 
+        adaptive (boolean): True, False. If true, the discrete filter stencil size will 
+            increase until the target optimisation error self._optError is reached. 
+        zeroToOne (boolean): If true, then 0 <= \hat{G}(k) <= 1 for all k in (0, pi).
+        positive (boolean): If true, then 0 <= \hat{G}(k) for all k in (0, pi).
+        monotoneNeg (boolean): If true, then 0 <= d\hat{G}(k)/dk <= 0 for all k in [0, pi].
+        monotonePos (boolean): If true, then 0 <= d\hat{G}(k)/dk >= 0 for all k in [0, pi].
+        fixOne (float []): If not none, then \hat{G}(k)= 1 for all k in list.
+        fixZero (float []): If not none, then \hat{G}(k)= 0 for all k in list.
+        luBounds ([, , []]): List of vlower, vupper, and wavenumbers k where  vlower<=g(k)<=vupper. 
 
     Author: Z. Nikolaou.
     """
     def __init__(self, target, discreteFilter, method="SLSQP", lamda=0.e0, optError=1.0e-6, maxIterations=100, error="msqe", \
-            isAdaptive=True, isZeroToOne=False, isPositive=False, isMonotonicNegative=False, isMonotonicPositive=False, \
-            isNoDampingAtK=None, isFullDampingAtK=None, isBounded=None):
+            adaptive=True, zeroToOne=False, positive=False, monotoneNeg=False, monotonePos=False, \
+            fixOne=None, fixZero=None, luBounds=None):
         #
         Log.__init__(self, type(self).__name__) 
         self._target=target
@@ -44,14 +40,14 @@ class Optimiser(Const, Log):
         self._optError=optError
         self._maxIterations=maxIterations
         self._error=error
-        self._isAdaptive=isAdaptive
-        self._isZeroToOne=isZeroToOne
-        self._isPositive=isPositive
-        self._isMonotonicPositive=isMonotonicPositive
-        self._isMonotonicNegative=isMonotonicNegative 
-        self._isNoDampingAtK=isNoDampingAtK
-        self._isFullDampingAtK=isFullDampingAtK
-        self._isBounded=isBounded
+        self._adaptive=adaptive
+        self._zeroToOne=zeroToOne
+        self._positive=positive
+        self._monotonePos=monotonePos
+        self._monotoneNeg=monotoneNeg 
+        self._fixOne=fixOne
+        self._fixZero=fixZero
+        self._luBounds=luBounds
         #
         self._objFunc=ObjectiveFunction(self._target, self._dfilter, lamda=self._lamda, error=self._error)
         self._nk=self._dfilter.getNk()
@@ -89,7 +85,7 @@ class Optimiser(Const, Log):
         nmp1=self._dfilter.getNmPlusOne()
         errorOld=None
         solOld=None
-        if self._isAdaptive: maxIter=self._maxIterations
+        if self._adaptive: maxIter=self._maxIterations
 
         for i in range(maxIter):
             if self._isInverse:
@@ -118,7 +114,7 @@ class Optimiser(Const, Log):
         if isConverged:
             print('\n*Success: converged at iteration ', itr, 'error=', self._error)
         else:
-            if self._isAdaptive:
+            if self._adaptive:
                 print('\n*Failure to converge for error=', self._optError)
                 print('\tOptimisation error attained=', self._error)
 
@@ -217,16 +213,15 @@ class Optimiser(Const, Log):
         A=self.__getConstraintMatrixA(nmp1)
         D=self.__getConstraintMatrixD(nmp1)
         constraintsList=[]
-        if(self._isMonotonicPositive): constraintsList.append(self.__getConstraintMonotonicPos(D))
-        if(self._isMonotonicNegative): constraintsList.append(self.__getConstraintMonotonicNeg(D))
-        if(self._isPositive): constraintsList.append(self.__getConstraintPositive(A))
-        if(self._isNoDampingAtK is not None):
-            for k in self._isNoDampingAtK: constraintsList.append(self.__getConstraintNoDampingAtK(A, k))
-        if(self._isFullDampingAtK is not None):
-            for k in self._isFullDampingAtK: constraintsList.append(self.__getConstraintFullDampingAtK(A, k))
-        if(self._isBounded is not None):
-            for itm in self._isBounded:
-                print('test', itm)
+        if(self._monotonePos): constraintsList.append(self.__getConstraintMonotonicPos(D))
+        if(self._monotoneNeg): constraintsList.append(self.__getConstraintMonotonicNeg(D))
+        if(self._positive): constraintsList.append(self.__getConstraintPositive(A))
+        if(self._fixOne is not None):
+            for k in self._fixOne: constraintsList.append(self.__getConstraintNoDampingAtK(A, k))
+        if(self._fixZero is not None):
+            for k in self._fixZero: constraintsList.append(self.__getConstraintFullDampingAtK(A, k))
+        if(self._luBounds is not None):
+            for itm in self._luBounds:
                 krange=itm[2]
                 vlower=itm[0]
                 vupper=itm[1]
@@ -238,7 +233,7 @@ class Optimiser(Const, Log):
         if(self._isInverse): 
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
         else:
-            if(self._isZeroToOne): constraintsList.append(self.__getConstraintZeroToOne(A))
+            if(self._zeroToOne): constraintsList.append(self.__getConstraintZeroToOne(A))
 
         return constraintsList
 

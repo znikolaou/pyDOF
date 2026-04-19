@@ -40,13 +40,11 @@ ho=df.getTransferFunction(bo[nsh:])
 
 #pyDof
 dflt=DiscreteFilter(wavenumber, nStencil=ns)
-#opt=Optimiser(flt, dflt, isAdaptive=False, isPositive=False, lamda=20.0, error="mabse")  
-opt=Optimiser(flt, dflt, isAdaptive=False, isPositive=False, isNoDampingAtK=[0.0, kcut-deltak/2.0], isFullDampingAtK=[kcut+deltak/2.0, np.pi], isBounded=[[1-0.0005, 1+0.0005, [0, kcut-deltak/2.0]], [-0.0005, 0.0005, [kcut+deltak/2.0, np.pi]]], lamda=0.0, error="msqe")
-#opt=Optimiser(flt, dflt, isAdaptive=False, isPositive=False, isBounded=[1-0.0005, 1+0.0005, kpass], lamda=10.0, error="mabse")  
+opt=Optimiser(flt, dflt, adaptive=False, positive=False, fixOne=[0.0, kcut-deltak/2.0], fixZero=[kcut+deltak/2.0, np.pi], luBounds=[[1-0.0005, 1+0.0005, [0, kcut-deltak/2.0]], [-0.0005, 0.0005, [kcut+deltak/2.0, np.pi]]], error="msqe")
 #
 opt.run()
-#out=Output(flt, dflt)
-#out.write()
+out=Output(flt, dflt)
+out.write()
 
 #errors
 msqe={}
