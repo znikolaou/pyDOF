@@ -24,7 +24,7 @@ class Optimiser(Const, Log):
         monotonePos (boolean): If true, then 0 <= d\hat{G}(k)/dk >= 0 for all k in [0, pi].
         fixOne (float []): If not none, then \hat{G}(k)= 1 for all k in list.
         fixZero (float []): If not none, then \hat{G}(k)= 0 for all k in list.
-        luBounds ([, , []]): List of vlower, vupper, and wavenumbers k where  vlower<=g(k)<=vupper. 
+        luBounds ([[, , []]]): List of vlower, vupper, and wavenumbers k where  vlower<=g(k)<=vupper. 
 
     Author: Z. Nikolaou.
     """

@@ -12,7 +12,7 @@ plt.rc('xtick', labelsize=big_size)
 plt.rc('ytick', labelsize=big_size)      
 plt.rc('legend', fontsize=legend_size)  
 plt.rc('figure', titlesize=big_size)  
-plt.rcParams['figure.figsize']=(11,8)
+plt.rcParams['figure.figsize']=(13,10)
 plt.rcParams['font.family']='serif'
 plt.rcParams['font.serif']=['Times New Roman']+plt.rcParams['font.serif']
 
