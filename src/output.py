@@ -17,15 +17,17 @@ class Output(Const):
     Author: Z. Nikolaou. 
     """
     def __init__(self, targetFilter, discreteFilter, reconstructedFilter=None, discreteInverseFilter=None, \
-            outputDir="./output/", fileName="coeffs"):
+            outputDir="./output/", fileName="coeffsFor", fileNameInv="coeffsInv"):
         self._dir=outputDir
         self._fileName=fileName
+        self._fileNameInv=fileNameInv
         self.__createDir()
         self._target=targetFilter
         self._dfilter=discreteFilter
         self._rfilter=reconstructedFilter
         self._ifilter=discreteInverseFilter
         self._fullPath=self._dir+"/"+self._fileName+".txt"
+        self._fullPathInv=self._dir+"/"+self._fileNameInv+".txt"
 
     def __createDir(self):
         isExists=os.path.exists(self._dir)
@@ -38,7 +40,8 @@ class Output(Const):
         nmp1=len(coeffs)
         nm=nmp1-1
         f.write(self.HEADER_OUT)
-        f.write('\n#Forward filter')
+        f.write('\n!')
+        f.write('\n! #Forward filter')
         f.write('\n! Name='+self._target.name())
         nprm=np.size(self._target._param)
         if nprm==1: 
@@ -49,21 +52,18 @@ class Output(Const):
         else:
             for i in range(nprm): 
                 f.write('\n! Parameter='+Form.short(self._target._param[i]))
-        #f.write('\n! k_ch=' \
-        #        +Form.short(self._target.getCutOff()))
-        #f.write('\n! Damping at pi='+ \
-        #        Form.short(self._target.getNyquistDamping()))
         f.write('\n! Stencil size='+str(self._dfilter.getNs()))
         f.write('\n! Optimisation error='+ \
                 Form.short(self._dfilter.optError))
         f.write('\n! Coeffs g[0], g[1], ... , g[nm_f]:')
         f.write('\n'+str(nmp1))
         for j in range(nmp1): \
-                f.write('\n'+str(j)+" "+Form.long(coeffs[j]))
+                f.write('\n'+Form.long(coeffs[j]))
         f.write('\n'+self.LINE)
         if(self._rfilter != None):
             if(self._ifilter != None): 
-                self.__writeInverse(f)
+                #self.__writeInverse(f)
+                self.__writeInverseSingleFile()
         f.close()
 
         return
@@ -80,9 +80,29 @@ class Output(Const):
         f.write('\n! Coeffs g[0], g[1], ... , g[nm_i]:')
         f.write('\n'+str(nmp1))
         for j in range(nmp1): \
-                f.write('\n'+str(j)+" "+Form.long(coeffs[j]))
+                f.write('\n'+Form.long(coeffs[j]))
         f.write('\n'+self.LINE)
         f.close()
 
+    def __writeInverseSingleFile(self):
+        f=open(self._fullPathInv,'w')
+        coeffs=self._ifilter.coeffs
+        nmp1=len(coeffs)
+        f.write(self.HEADER_OUT)
+        f.write('\n!')
+        f.write('\n! #Inverse filter')
+        f.write('\n! Name (forward)='+self._target.name())
+        f.write('\n! Reconstruction order (N van Cittert)='+str(self._rfilter.getNvanCittert()))
+        f.write('\n! Stencil size='+str(self._ifilter.getNs()))
+        f.write('\n! Optimisation error='+ \
+                Form.short(self._ifilter.optError))
+        f.write('\n! Coeffs g[0], g[1], ... , g[nm_i]:')
+        f.write('\n'+str(nmp1))
+        for j in range(nmp1): \
+                f.write('\n'+Form.long(coeffs[j]))
+        f.write('\n'+self.LINE)
+        f.close()
+
+ 
         return
 #-----------------------------------------------------------------------
