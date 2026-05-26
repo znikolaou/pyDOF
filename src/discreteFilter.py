@@ -80,4 +80,10 @@ class DiscreteFilter(Log, Const):
         if(nVanCittert==0): return tFunc
         nvp1=nVanCittert+1
         return np.array([self.ONE-(self.ONE-v)**nvp1 for v in tFunc])
+
+    def __getRegularisedInverse(self, tFunc, nVanCittert):
+        if nVanCittert==0: return tFunc
+        return self.__getReconstructedTransferFunction(tFunc, nVanCittert)/tFunc
+
+
 #-----------------------------------------------------------------------
