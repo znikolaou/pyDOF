@@ -1,4 +1,5 @@
 from libs import *
+from utils import *
 from objectiveFunction import *
 from reconstructedTransferFunction import *
 from scipy.optimize import Bounds
@@ -31,7 +32,6 @@ class Optimiser(Const, Log):
     def __init__(self, target, discreteFilter, method="SLSQP", lamda=0.e0, optError=1.0e-6, maxIterations=100, error="msqe", \
             adaptive=True, zeroToOne=False, positive=False, monotoneNeg=False, monotonePos=False, \
             fixOne=None, fixZero=None, luBounds=None):
-        #
         Log.__init__(self, type(self).__name__) 
         self._target=target
         self._dfilter=discreteFilter
@@ -61,11 +61,9 @@ class Optimiser(Const, Log):
  
     def __printInfo(self):
         if(self._isInverse):
-            print('')
-            print("Optimiser-inverse filter:")
+            print("\nOptimiser-inverse filter:")
         else:
-            print('')
-            print("Optimiser-forward filter:")
+            print("\nOptimiser-forward filter:")
 
     def __getNvanCittert(self):
         nv=None
@@ -80,39 +78,48 @@ class Optimiser(Const, Log):
 
     def run(self): 
         isConverged=False
-        maxIter=1
-        itr=1
-        nmp1=self._dfilter.getNmPlusOne()
         errorOld=None
         solOld=None
+        maxIter=1
+        itr=1
+        itrDiv=0
+        nmp1=self._dfilter.getNmPlusOne()
+        x=self.__getInitialGuess(nmp1)      
+        nmp1Old=nmp1
         if self._adaptive: maxIter=self._maxIterations
 
-        for i in range(maxIter):
-            if self._isInverse:
-                x=self.__getInitialGuessForConstantAtUnity(nmp1)
-            else:
-                x=self.__getInitialGuessForThreePointForward(nmp1)
+        for i in range(maxIter): 
             self._solution=self.__getConstrainedSolution(x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
-            self.__printIterInfo(itr, nmp1, self._error) 
-            
+            #if(itrDiv==0): self.__printIterInfo(itr, nmp1, self._error) 
             if self.__isConverged(self._error): 
                 isConverged=True
                 break
-            if self.__isDiverging(itr, self._error, errorOld): 
+            if self.__isDiverging(itr, self._error, errorOld, itrDiv, nmp1Old, nmp1):
+                itrDiv+=1
                 isConverged=False
                 self._solution=solOld
                 self._error=errorOld
-                break
-
-            nmp1+=1
-            itr+=1
-            errorOld=self._error
-            solOld=self._solution
-            xOld=solOld.x
+                if itrDiv<=Const.ITR_MX_DIV:
+                    x=self.__getPertGuess(xOld, nmp1)                    
+                else:
+                    print('\t*Max internal itr, failed for stencil size ns=', nmp1)
+                    print('\t*Reverting to last solution-try initialising from a different stencil size.')
+                    print('\t*Terminating ...')
+                    break
+            else:
+                self.__printIterInfo(itr, nmp1, self._error) 
+                nmp1Old=nmp1
+                itrDiv=0
+                nmp1+=1
+                itr+=1
+                x=self.__getInitialGuess(nmp1)
+                errorOld=self._error
+                solOld=self._solution
+                xOld=solOld.x
         
         if isConverged:
-            print('\n*Success: converged at iteration ', itr, 'error=', self._error)
+            print('\n*Success: converged: itr', itr, 'error', Form.short(self._error), 'target error', Form.short(self._optError))
         else:
             if self._adaptive:
                 print('\n*Failure to converge for error=', self._optError)
@@ -123,12 +130,11 @@ class Optimiser(Const, Log):
                
     def __isConverged(self, error): return error<=self._optError
           
-    def __isDiverging(self, itr, error, errorOld):
+    def __isDiverging(self, itr, error, errorOld, itrDiv, nmp1Old, nmp1):
         if itr>1:
-            if error>Const.DIVERGENCE_FACTOR*errorOld:
-                    print('*Increasing error detected, error=', error, 'errorOld=', errorOld)
-                    print('\tReverting to last solution ...')
-                    return True
+            if error>errorOld*Const.DIVERGENCE_FACTOR:
+                print('\t \titr-div', itrDiv, 'increasing error:', nmp1Old,'-',Form.short(errorOld),'-->',nmp1,'-',Form.short(error),'perturbing ...')
+                return True
             else:
                 return False
         else:
@@ -137,14 +143,22 @@ class Optimiser(Const, Log):
     def get(self): return self._solution.x
  
     def __printIterInfo(self, itr, nmp1, error):
-        print("\tIteration=", itr, "stencil size (nm+1)=", nmp1, "error=", error)
-   
-    def __getInitialGuessForThreePointForward(self, nmp1):
-        xo=np.zeros(nmp1)
-        xo[0]=Const.HALF
-        xo[1]=Const.HALF*Const.HALF
-        return xo
+        print("\tItr", itr, "(nm+1)", nmp1, "error", Form.short(error))
+  
+    def __getPertGuess(self, x, nsp, sp=0.20):
+        ns=np.size(x)
+        xp=np.zeros(nsp)
+        nc=min(ns, nsp)
+        for i in range(nc):
+            xp[i]=x[i]+sp*x[i]*np.random.randn()
+        return xp
 
+    def __getInitialGuess(self, nmp1):
+        if self._isInverse:
+            return self.__getInitialGuessForThreePointForward(nmp1)
+        else:
+            return self.__getInitialGuessForThreePointForward(nmp1)
+        
     def __getInitialGuessFromOld(self, nmp1, xOld):
         nmp1Old=np.size(xOld)
         xo=np.zeros(nmp1)
@@ -154,10 +168,17 @@ class Optimiser(Const, Log):
             xo[0:nmp1]=xOld[0:nmp1]
         return xo
 
+    def __getInitialGuessForThreePointForward(self, nmp1):
+        xo=np.zeros(nmp1)
+        xo[0]=Const.HALF
+        xo[1]=Const.HALF*Const.HALF
+        return xo
+
     def __getInitialGuessForThreePointInverse(self, nmp1):
         xo=np.zeros(nmp1)
-        xo[0]=2.0#nVan*Const.HALF+Const.ONE
-        xo[1]=-0.5#-nVan*Const.HALF*Const.HALF
+        nVan=self._target.getNvanCittert()
+        xo[0]=nVan*Const.HALF+Const.ONE
+        xo[1]=-nVan*Const.HALF*Const.HALF
         return xo
 
     def __getInitialGuessForConstantAtUnity(self, nmp1):
@@ -225,12 +246,10 @@ class Optimiser(Const, Log):
                 krange=itm[2]
                 vlower=itm[0]
                 vupper=itm[1]
-                print(krange, vlower, vupper)
                 for k in self._k:
                     if k>=krange[0] and k<=krange[1]:
                         constraintsList.append(self.__getConstraintBounded(A, k, vlower, vupper))
-        #
-        if(self._isInverse): 
+        if(self._isInverse):
             constraintsList.append(self.__getConstraintBetweenOneAndNPlusOne(A))
         else:
             if(self._zeroToOne): constraintsList.append(self.__getConstraintZeroToOne(A))
