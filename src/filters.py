@@ -139,6 +139,32 @@ class Implicit(Filter):
 
     def getCutOff(self): return np.arccos(-Const.TWO*self._param)
 #-----------------------------------------------------------------------
+class Inverse(Filter, Const):
+    """
+      Attributes: 
+
+    Author: Z. Nikolaou
+    """
+ 
+    def __init__(self, forFilter, nV=0):
+        self._forFilter=forFilter
+        self._forTfunc=self._forFilter.getTransferFunction()
+        self._k=self._forFilter._k
+        self._nV=nV
+        self._tFunc=self.__buildTransferFunction()
+        Filter.__init__(self, self._k, self._tFunc)
+
+    def name(self): return "Inverse"
+
+    def __buildTransferFunction(self):
+        nk=len(self._forTfunc)
+        tFunc=np.zeros(nk)
+        for i in range(nk):
+            tFunc[i]=(Const.ONE-(Const.ONE-self._forTfunc[i])**(self._nV+Const.ONE))/self._forTfunc[i]
+        return tFunc
+
+    def getNvanCittert(self): return self._nV
+#-----------------------------------------------------------------------
 class Sharp(Filter):
     """
     Class for designing sharp filters (lowpass, highpass, bandpass, bandstop). 
@@ -289,7 +315,7 @@ class Butterworth(Filter):
 
     Author: Z. Nikolaou
     """
-    def __init__(self, wavenumber, paramKc, paramN, fType):
+    def __init__(self, wavenumber, paramKc, paramN, fType=None):
         self._k=wavenumber.get()
         self._param=[paramKc, paramN]
         self._fType=fType
@@ -324,6 +350,30 @@ class Butterworth(Filter):
     def getTransWidth(self): return self.getKstop()-self.getKpass()
 
 #-----------------------------------------------------------------------
+class Constant(Filter):
+    """
+    Class for constant filter: ^G(k)=v
+
+    Attributes: 
+        wavenumber (Wavenumber): the wavenumber object.
+        v (float): filter constant value
+
+    Author: Z. Nikolaou
+    """
+    def __init__(self, wavenumber, v=1.0e0):
+        self._k=wavenumber.get()
+        self._param=v
+        self._tFunc=self.__buildTransferFunction()
+        Filter.__init__(self, self._k, self._tFunc)
+
+    def name(self): return "Constant"
+
+    def __buildTransferFunction(self):
+        tFunc=[]
+        for k in self._k: tFunc.append(self._param)
+        return tFunc
+#-----------------------------------------------------------------------
+
 class ErrorFunction(Filter):
     """
     Class for error-function-based filter: ^G(k)=0.5*(1-erf((kh-kch)sqrt(pi)/a))
