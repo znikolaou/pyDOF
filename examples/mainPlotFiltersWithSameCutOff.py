@@ -3,7 +3,7 @@ from utils import *
 from discreteFilter import *
 from filters import *
 
-nButterworth=3
+nButterworth=4
 wavenumber=Wavenumber()
 
 fltG=Gaussian(wavenumber, 4.0e0)

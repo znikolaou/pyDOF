@@ -5,9 +5,12 @@ import numpy as np
 
 ks=np.pi*2.0
 knyq=ks/2.0
-deltak=0.10*knyq
-kcut=knyq/2.0
-ns=73
+#deltak=0.10*knyq
+deltak=0.05*knyq
+kcut=0.8*knyq
+#ns=73
+ns=145
+
 #
 nsh=int((ns-1)/2)
 #
@@ -73,22 +76,18 @@ for key in mabse: print(key, mabse[key])
 print('Max % overshoot in passband:')
 for key in overshoot: print(key, overshoot[key])
 
-"""
-#plt.subplot(1,2,1)
-plt.plot(k, tfSharp, 'k--', label='$Ideal$')
-plt.plot(k, hwk, label='$Kaiser$')
-plt.plot(k, hp, label='$Parks-McClellan$')
-plt.plot(k, ho, label='$Least-squares$')
-plt.plot(k, dflt.getTransferFunction(), '--', label="$pyDof-A$")
+plt.plot(k, (hwk), label='$Kaiser$')
+plt.plot(k, (hp), label='$Parks-McClellan$')
+plt.plot(k, (ho), label='$Least-squares$')
+plt.plot(k, (dflt.getTransferFunction()), '--', label="$pyDof$")
 plt.xlabel('$kh$')
 plt.ylabel('$\hat{G}_d$')
-plt.legend(frameon=False, loc='upper right')
+plt.legend(frameon=False, loc='lower left')
 plt.grid('on')
 plt.xlim(0.0, np.pi)
+plt.ylim(-0.1, 1.1)
 plt.show()
-exit()
-"""
-#plt.subplot(1,2,2)
+
 plt.plot(k, 20*np.log10(hwk), label='$Kaiser$')
 plt.plot(k, 20*np.log10(hp), label='$Parks-McClellan$')
 plt.plot(k, 20*np.log10(ho), label='$Least-squares$')
@@ -98,8 +97,7 @@ plt.ylabel('$dB(\hat{G}_d)$')
 plt.legend(frameon=False, loc='lower left')
 plt.grid('on')
 plt.xlim(0.0, np.pi)
-plt.ylim(-140, 5.0)
+plt.ylim(-130, 10.0)
 plt.show()
-
 
 

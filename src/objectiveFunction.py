@@ -31,8 +31,7 @@ class ObjectiveFunction(Errors, Const):
     def get(self, coeffs):
         self._counter+=1
         gradEr=Const.ZERO
-        grad=Const.ZERO
-
+        grad=Const.ZERO       
         if(isinstance(self._target, ReconstructedTransferFunction)):
             self._lastSol=self._target.getVQTransferFunction(coeffs)
         else:

@@ -1,30 +1,39 @@
 from include import *
 
 nVanCit=500
-
 wavenumber=Wavenumber()
 errors=Errors()
 
-flt=Gaussian(wavenumber, param=4.0)
+flt=Gaussian(wavenumber, param=8.0)
 dflt=DiscreteFilter(wavenumber)
-opt=Optimiser(flt, dflt, isAdaptive=True, isNoDampingAtK=[0.0], isMonotonicNegative=True)
+opt=Optimiser(flt, dflt, adaptive=True, fixOne=[0.0], monotoneNeg=True, error="msqe")
 opt.run()
-percErrorF=errors.maperc(dflt.getTransferFunction(), flt.getTransferFunction())
-print("Forward filter mean abs perc error=", percErrorF)
 
-recTfunc=ReconstructedTransferFunction(dflt, nVanCittert=nVanCit)
-vdflt=DiscreteFilter(wavenumber, isForward=False)
-iopt=Optimiser(recTfunc, vdflt, optError=1.0e-5, isNoDampingAtK=[0.0], isMonotonicPositive=True)
+gdfor=dflt.getTransferFunction()
+tfor=flt.getTransferFunction()
+mpercF=errors.maperc(gdfor, tfor)
+msqeF=errors.msqe(gdfor, tfor)
+print("Forward filter:")
+print("MSQE=", msqeF)
+print("MPERC=", mpercF)
+
+qFunc=ReconstructedTransferFunction(dflt, nVanCittert=nVanCit)
+vdflt=DiscreteFilter(wavenumber, isForward=False, nStencil=dflt.getNs())
+iopt=Optimiser(qFunc, vdflt, adaptive=True, optError=1.0e-5, fixOne=[0.0], monotonePos=True, error="msqe")
 iopt.run()
 
-vgTfunc=vdflt.getTransferFunction()*dflt.getTransferFunction()
-maxOverShootPerc=errors.maxOvershoot(vgTfunc)
-percErrorI=errors.maperc(vgTfunc, recTfunc.getTransferFunction())
-print("Inverse filter mean abs perc error=", percErrorI)
-print("Max over shoot % (reconstructed)=", maxOverShootPerc)
+q=qFunc.getTransferFunction()
+vg=vdflt.getTransferFunction()*gdfor
+maxOverShootPerc=(np.max(vg)-1.0)*100.0
+mpercI=errors.maperc(vg, q)
+msqeI=errors.msqe(vg, q)
+print("Inverse filter:")
+print("MSQE=", msqeI)
+print("MPERC=", mpercI)
+print("Max over shoot % (VG)=", maxOverShootPerc)
 
-out=Output(flt, dflt, recTfunc, vdflt)
+out=Output(flt, dflt, qFunc, vdflt)
 out.write()
 
-plotAll(wavenumber.get(), flt, dflt, recTfunc, vdflt, nVanCit)
+plotAll(wavenumber.get(), flt, dflt, qFunc, vdflt, nVanCit)
 
