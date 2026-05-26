@@ -14,10 +14,11 @@ class Const:
     TWO=2.0e0
     PI=np.pi
     NK_NOMINAL=512
-    DIVERGENCE_FACTOR=1.10
+    ITR_MX_DIV=50;
+    DIVERGENCE_FACTOR=1.00
     TOL_NYQDAMP=0.1
     #
-    NUM_FORMAT_SHORT="{:.8e}.".format
+    NUM_FORMAT_SHORT="{:.8e}".format
     NUM_FORMAT_LONG="{:.16e}".format
     #
     DATE=datetime.datetime.now()
@@ -28,6 +29,6 @@ class Const:
     AUTHOR='! Author: Z. Nikolaou '
     IS_AUTO='! This is an auto-generated file: '+str(DATE)
     LINE="!-------------------------------------------------------------"
-    HEADER_OUT=LINE+"\n"+LOGO+"\n"+IS_AUTO+"\n"+AUTHOR+"\n"+LINE
+    HEADER_OUT=LINE+"\n"+LOGO+"\n"+IS_AUTO+"\n!"+"\n"+AUTHOR+"\n"+LINE
     #-----------------------------------------------------------------------
 
