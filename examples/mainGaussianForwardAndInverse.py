@@ -1,12 +1,12 @@
 from include import *
 
-nVanCit=500
+nVanCit=5000
 wavenumber=Wavenumber()
 errors=Errors()
 
-flt=Gaussian(wavenumber, param=8.0)
+flt=Gaussian(wavenumber, param=4.0)
 dflt=DiscreteFilter(wavenumber)
-opt=Optimiser(flt, dflt, adaptive=True, fixOne=[0.0], monotoneNeg=True, error="msqe")
+opt=Optimiser(flt, dflt, adaptive=True, fixOne=[0.0], error="msqe")
 opt.run()
 
 gdfor=dflt.getTransferFunction()
@@ -21,6 +21,8 @@ qFunc=ReconstructedTransferFunction(dflt, nVanCittert=nVanCit)
 vdflt=DiscreteFilter(wavenumber, isForward=False, nStencil=dflt.getNs())
 iopt=Optimiser(qFunc, vdflt, adaptive=True, optError=1.0e-5, fixOne=[0.0], monotonePos=True, error="msqe")
 iopt.run()
+out=Output(flt, dflt, qFunc, vdflt)
+out.write()
 
 q=qFunc.getTransferFunction()
 vg=vdflt.getTransferFunction()*gdfor
@@ -31,9 +33,6 @@ print("Inverse filter:")
 print("MSQE=", msqeI)
 print("MPERC=", mpercI)
 print("Max over shoot % (VG)=", maxOverShootPerc)
-
-out=Output(flt, dflt, qFunc, vdflt)
-out.write()
 
 plotAll(wavenumber.get(), flt, dflt, qFunc, vdflt, nVanCit)
 

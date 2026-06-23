@@ -16,6 +16,7 @@ class Const:
     NK_NOMINAL=512
     ITR_MX_DIV=50;
     DIVERGENCE_FACTOR=1.00
+    PERT_SIGMA_PARAM=0.05
     TOL_NYQDAMP=0.1
     #
     NUM_FORMAT_SHORT="{:.8e}".format

@@ -1,15 +1,11 @@
 from include import *
-from errors import *
-import scipy.signal as signal
-import numpy as np
 
 ks=np.pi*2.0
 knyq=ks/2.0
-#deltak=0.10*knyq
 deltak=0.05*knyq
-kcut=0.8*knyq
-#ns=73
+kcut=0.5*knyq
 ns=145
+rpl=0.0005
 
 #
 nsh=int((ns-1)/2)
@@ -43,8 +39,7 @@ ho=df.getTransferFunction(bo[nsh:])
 
 #pyDof
 dflt=DiscreteFilter(wavenumber, nStencil=ns)
-opt=Optimiser(flt, dflt, adaptive=False, positive=False, fixOne=[0.0, kcut-deltak/2.0], fixZero=[kcut+deltak/2.0, np.pi], luBounds=[[1-0.0005, 1+0.0005, [0, kcut-deltak/2.0]], [-0.0005, 0.0005, [kcut+deltak/2.0, np.pi]]], error="msqe")
-#
+opt=Optimiser(flt, dflt, adaptive=False, fixOne=[0.0], fixZero=[np.pi], luBounds=[[1-rpl, 1+rpl, [0, kcut-deltak/2.0]], [-rpl, rpl, [kcut+deltak/2.0, np.pi]]])
 opt.run()
 out=Output(flt, dflt)
 out.write()

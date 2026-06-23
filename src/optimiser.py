@@ -91,7 +91,6 @@ class Optimiser(Const, Log):
         for i in range(maxIter): 
             self._solution=self.__getConstrainedSolution(x, self.__getConstraintsList(nmp1))
             self._error=self._objFunc.getLastError()
-            #if(itrDiv==0): self.__printIterInfo(itr, nmp1, self._error) 
             if self.__isConverged(self._error): 
                 isConverged=True
                 break
@@ -101,7 +100,9 @@ class Optimiser(Const, Log):
                 self._solution=solOld
                 self._error=errorOld
                 if itrDiv<=Const.ITR_MX_DIV:
-                    x=self.__getPertGuess(xOld, nmp1)                    
+                    x=self.__getPertGuess(xOld, nmp1)     
+                    solUnc=self.__getUnConstrainedSolution(x)
+                    x=solUnc.x
                 else:
                     print('\t*Max internal itr, failed for stencil size ns=', nmp1)
                     print('\t*Reverting to last solution-try initialising from a different stencil size.')
@@ -145,19 +146,22 @@ class Optimiser(Const, Log):
     def __printIterInfo(self, itr, nmp1, error):
         print("\tItr", itr, "(nm+1)", nmp1, "error", Form.short(error))
   
-    def __getPertGuess(self, x, nsp, sp=0.20):
+    def __getPertGuess(self, x, nsp):
         ns=np.size(x)
         xp=np.zeros(nsp)
         nc=min(ns, nsp)
         for i in range(nc):
-            xp[i]=x[i]+sp*x[i]*np.random.randn()
+            xp[i]=x[i]+Const.PERT_SIGMA_PARAM*x[i]*np.random.randn()
         return xp
 
     def __getInitialGuess(self, nmp1):
         if self._isInverse:
-            return self.__getInitialGuessForThreePointForward(nmp1)
+            xo=self.__getInitialGuessForThreePointInverse(nmp1)
         else:
-            return self.__getInitialGuessForThreePointForward(nmp1)
+            xo=self.__getInitialGuessForThreePointForward(nmp1)
+            #xo=self.__getInitialGuessForConstantAtUnity(nmp1) 
+        #solUnc=self.__getUnConstrainedSolution(xo)
+        return xo
         
     def __getInitialGuessFromOld(self, nmp1, xOld):
         nmp1Old=np.size(xOld)

@@ -1,12 +1,12 @@
 from include import *
 
-nVanCit=500
+nVanCit=50
 wavenumber=Wavenumber()
 errors=Errors()
 
-flt=Implicit(wavenumber, param=-0.45)
-dflt=DiscreteFilter(wavenumber, nStencil=33)
-opt=Optimiser(flt, dflt, adaptive=True, fixOne=[0.0], fixZero=[np.pi], monotoneNeg=True, optError=1.0e-7, error="msqe")
+flt=Implicit(wavenumber, param=-0.49)
+dflt=DiscreteFilter(wavenumber, nStencil=45)
+opt=Optimiser(flt, dflt, adaptive=True, fixOne=[0.0], fixZero=[np.pi], monotoneNeg=True, optError=1.0e-8, error="msqe")
 opt.run()
 
 gdfor=dflt.getTransferFunction()
