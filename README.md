@@ -1,6 +1,5 @@
 # pyDof
 
-![title](figs/logoImage.png) 
 ![title](figs/2dimages_c.png)
 ![title](figs/2dimages_turbvflame.png) 
      
