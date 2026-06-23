@@ -1,6 +1,7 @@
 # pyDof
 
 ![title](figs/2dimages_c.png)
+!![title](figs/2dimages_b.png)
 ![title](figs/2dimages_turbvflame.png) 
         
 **pyDOF** is a library for designing discrete/digital symmetric filters using 
