@@ -2,14 +2,19 @@
 
 ![title](figs/2dimages_c.png)
 ![title](figs/2dimages_turbvflame.png) 
-     
-   
-**pyDof**, is a library for computing optimised coefficients for discrete forward and inverse filters according to the methodology
-developed in [1, 2]. 
-
-The user can select amongst Gaussian, Helmholtz, 3-point Implicit, Butterworth, and may also 
-implement their own filter transfer function. The filter coefficients are computed by solving an optimisation problem
-and saved to file. Numerous filter constraints are currently supported: positivity, monotonicity etc.    
+        
+**pyDOF** is a library for designing discrete/digital symmetric filters using 
+a multi-objective and constrained optimisation framework [1, 2]. 
+This framework allows the user to impose a wide range of constraints to the
+discrete filter transfer function such as  monotonicity, positivity, value-fixing, 
+gradient smoothing etc. The filter stencil size can be set by the user or computed dynamically
+by the solver. **pyDOF** solves the constrained optimisation problem, and outputs automatically 
+the discrete filter coefficients in a plain text file which can be readily parsed by an programming language. 
+The user can select amongst a wide range of built-in target trasfer functions 
+(Gaussian, Helmholtz, 3-point Implicit, Butterworth, sharp cut-off), and may also 
+implement their own target transfer function. **pyDOF** can be used to design a wide range
+of filters such as low-pass, high-pass, multi band-pass/band-stop etc. For details
+on the method we refer the user to [1,2]. 
 
 **Author: Z. Nikolaou (2025).** 
 
