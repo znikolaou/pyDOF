@@ -26,7 +26,7 @@ class Const:
     MONTH=DATE.month
     YEAR=DATE.year
     #
-    LOGO="! PYDOF 2025"
+    LOGO="! PYDOF 2026"
     AUTHOR='! Author: Z. Nikolaou '
     IS_AUTO='! This is an auto-generated file: '+str(DATE)
     LINE="!-------------------------------------------------------------"
