@@ -8,6 +8,7 @@ from utils import *
 from discreteFilter import *
 from filters import *
 from objectiveFunction import *
+#from optimiser import *
 from optimiser import *
 from output import *
 from errors import *
