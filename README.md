@@ -41,3 +41,9 @@ To use:
 -------
 
 Have a look at the *./examples/* directory.
+
+Cite:
+-----
+
+Z. Nikolaou, P. Domingo, L. Vervisch, D. Drikakis. [arXiv link](https://arxiv.org/abs/2606.26830)
+pyDOF: a Python library for the design of discrete forward and inverse filters.
