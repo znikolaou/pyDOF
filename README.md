@@ -1,7 +1,7 @@
 # pyDof
 
 ![title](figs/2dimages_c.png)
-!![title](figs/2dimages_b.png)
+![title](figs/2dimages_b.png)
 ![title](figs/2dimages_e.png)
 ![title](figs/2dimages_turbvflame.png) 
         
