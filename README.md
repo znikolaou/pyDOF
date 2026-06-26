@@ -15,18 +15,11 @@ the discrete filter coefficients in a plain text file which can be readily parse
 The user can select amongst a wide range of built-in target trasfer functions 
 (Gaussian, Helmholtz, 3-point Implicit, Butterworth, sharp cut-off), and may also 
 implement their own target transfer function. **pyDOF** can be used to design a wide range
-of filters such as low-pass, high-pass, multi band-pass/band-stop etc. For details
-on the method we refer the user to [1,2]. 
+of filters such as low-pass, high-pass, multi band-pass/band-stop etc. 
 
 **Author: Z. Nikolaou (2025).** 
 
 **Contact: ZachariasMNic@gmail.com**
-
-**References:** 
-
- [1] Z. Nikolaou, L. Vervisch, P. Domingo. Comp. Fluids 255 (2023) 105840. 
-
- [2] Z. Nikolaou, L. Vervisch, P. Domingo. J. Fluid Mech. 983 (2023) A47. 
 
 Installation: 
 -------------
@@ -45,6 +38,14 @@ Have a look at the *./examples/* directory.
 Cite:
 -----
 
-Z. Nikolaou, P. Domingo, L. Vervisch, D. Drikakis. [arXiv link](https://arxiv.org/abs/2606.26830)
+ [1] Z. Nikolaou, P. Domingo, L. Vervisch, D. Drikakis. [arXiv link](https://arxiv.org/abs/2606.26830)
 
-pyDOF: a Python library for the design of discrete forward and inverse filters.
+ pyDOF: a Python library for the design of discrete forward and inverse filters.
+
+ [2] Z. Nikolaou, L. Vervisch, P. Domingo. Comp. Fluids 255 (2023) 105840. 
+
+ An optimisation framework for the development of explicit discrete forward and inverse filters.
+
+ [3] Z. Nikolaou, L. Vervisch, P. Domingo. J. Fluid Mech. 983 (2023) A47. 
+
+ Revisiting the modelling framework for the unresolved scalar variance.
