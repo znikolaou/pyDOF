@@ -26,14 +26,54 @@ Installation:
 
 1. Clone the repo to your local machine.  
 
-2. Set environment variables: 
+   E.g. with ssh: 
+
+   git clone git@github.com:znikolaou/pyDOF.git
+
+2. Navigate to the cloned directory and install required libraries:
+
+   pip install -r requirements.txt
+
+3. Set the environment variables: 
    
    *source setenv.sh*
-    
+
+   This will set up the following environment variables: 
+
+   PYDOF\_HOME : installation directory
+
+   PYDOF\_SRC : source file directory
+
+   PYDOF\_EXAMPLES : examples directory
+
+   PYDOF\_TEST : testing directory
+
 To use:
 -------
 
-Have a look at the *./examples/* directory.
+Navigate to your preferred working directory, and 
+add the PYDOF\_SRC environment variable to your Python PATH
+so that all the classes under PYDOF\_SRC are available. 
+We suggest creating an include.py file and adding: 
+
+import sys
+sys.path.append(os.environ.get("PYDOF_SRC"))
+from plotlib import *
+from utils import *
+from discreteFilter import *
+from filters import *
+from objectiveFunction import *
+from optimiser import *
+from output import *
+from errors import *
+
+Then in your main.py file simply import the above:
+
+from include import *
+
+Have a look at the *./examples/* directory where 
+a sample include.py file is given-this file is then
+imported for every example therein as detailed above.
 
 Cite:
 -----
