@@ -40,13 +40,20 @@ Installation:
 
    This will set up the following environment variables: 
 
-   PYDOF\_HOME : installation directory
+   PYDOF\_HOME : installation directory.
 
-   PYDOF\_SRC : source file directory
+   PYDOF\_SRC : directory containing all the source files.
+   
+   Major classes such as DiscreteFilter, Optimiser etc. 
+   are located in this directory with the name of the file 
+   denoting the corresponding class. CamelCase format 
+   is used throughout therefore all source code is readable 
+   and self-explanatory. In-class code descriptions are 
+   also provided.  
 
-   PYDOF\_EXAMPLES : examples directory
+   PYDOF\_EXAMPLES : examples directory. 
 
-   PYDOF\_TEST : testing directory
+   PYDOF\_TEST : directory including unit tests. 
 
 To use:
 -------
