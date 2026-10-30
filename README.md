@@ -88,7 +88,9 @@ Then in your main.py file simply import the above:
 from include import \*
 
 Have a look at the *./examples/* directory where a sample include.py file is given-this file is then
-imported for every example therein as detailed above.
+imported for every example therein as detailed above. For an easy start,
+we suggest copying one of the examples to your working dir, and modifying it accordingly
+to fit your needs.
 
 Cite:
 -----
